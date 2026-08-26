@@ -21,6 +21,7 @@ export function UploadZone({
 
   const handleFiles = async (list: FileList | null) => {
     const files = Array.from(list ?? []);
+    console.log("handleFiles", files.length);
     if (!files.length) return;
     setBusy(true);
     const items: FeedItem[] = [];
