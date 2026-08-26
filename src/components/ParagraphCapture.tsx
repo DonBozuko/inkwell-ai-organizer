@@ -1,4 +1,4 @@
-import { Check, Sparkles, SlidersHorizontal, Wand2 } from "lucide-react";
+import { Check, FileText, Sparkles, SlidersHorizontal, Wand2 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -8,12 +8,14 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { useIsMobile } from "@/hooks/use-mobile";
 import {
-  CATEGORIES,
   categoryLabel,
+  formatBytes,
   suggestCategory,
   suggestTags,
   suggestTitle,
+  useCategories,
   useNotes,
+  type Attachment,
   type CategoryId,
 } from "@/lib/notes";
 import { cn } from "@/lib/utils";
@@ -21,20 +23,27 @@ import { cn } from "@/lib/utils";
 type MenuProps = {
   text: string;
   source: string;
+  attachment?: Attachment;
   onSaved: () => void;
   close: () => void;
 };
 
-function CaptureForm({ text, source, onSaved, close }: MenuProps) {
+function defaultTitle(text: string, attachment?: Attachment) {
+  if (text.trim()) return suggestTitle(text);
+  return attachment?.name.replace(/\.[^.]+$/, "") ?? "Nova nota";
+}
+
+function CaptureForm({ text, source, attachment, onSaved, close }: MenuProps) {
   const { addNote } = useNotes();
-  const [title, setTitle] = useState(() => suggestTitle(text));
+  const { categories } = useCategories();
+  const [title, setTitle] = useState(() => defaultTitle(text, attachment));
   const [custom, setCustom] = useState(false);
   const [category, setCategory] = useState<CategoryId>(() => suggestCategory(text));
   const [tags, setTags] = useState(() => suggestTags(text).join(", "));
 
   const save = (cat: CategoryId) => {
     addNote({
-      title: title.trim() || suggestTitle(text),
+      title: title.trim() || defaultTitle(text, attachment),
       text,
       category: cat,
       tags: tags
@@ -42,9 +51,10 @@ function CaptureForm({ text, source, onSaved, close }: MenuProps) {
         .map((t) => t.trim())
         .filter(Boolean),
       source,
+      ...(attachment ? { attachment } : {}),
     });
     toast.success(`Nota salva na pasta ${categoryLabel(cat)}!`, {
-      description: title.trim() || suggestTitle(text),
+      description: title.trim() || defaultTitle(text, attachment),
     });
     onSaved();
     close();
@@ -59,7 +69,15 @@ function CaptureForm({ text, source, onSaved, close }: MenuProps) {
         <Input value={title} onChange={(e) => setTitle(e.target.value)} className="h-12 text-base" />
       </div>
 
-      <p className="line-clamp-3 rounded-xl bg-muted px-3 py-2.5 text-sm text-muted-foreground">{text}</p>
+      {attachment?.kind === "image" && attachment.dataUrl && (
+        <img
+          src={attachment.dataUrl}
+          alt={attachment.name}
+          className="max-h-48 w-full rounded-xl object-cover"
+        />
+      )}
+
+      {text && <p className="line-clamp-3 rounded-xl bg-muted px-3 py-2.5 text-sm text-muted-foreground">{text}</p>}
 
       {!custom ? (
         <div className="grid gap-2">
@@ -85,7 +103,7 @@ function CaptureForm({ text, source, onSaved, close }: MenuProps) {
           <div className="space-y-2">
             <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Pasta</p>
             <div className="grid grid-cols-2 gap-2">
-              {CATEGORIES.map((c) => (
+              {categories.map((c) => (
                 <button
                   key={c.id}
                   type="button"
@@ -122,10 +140,12 @@ export function ParagraphCapture({
   text,
   source,
   index,
+  attachment,
 }: {
   text: string;
   source: string;
   index: number;
+  attachment?: Attachment;
 }) {
   const isMobile = useIsMobile();
   const [open, setOpen] = useState(false);
@@ -151,6 +171,16 @@ export function ParagraphCapture({
     </button>
   );
 
+  const form = (
+    <CaptureForm
+      text={text}
+      source={source}
+      {...(attachment ? { attachment } : {})}
+      onSaved={() => setSaved(true)}
+      close={() => setOpen(false)}
+    />
+  );
+
   return (
     <div
       className="group relative rise-in pl-8 sm:pl-10"
@@ -164,12 +194,7 @@ export function ParagraphCapture({
               <SheetHeader className="px-0 pb-2">
                 <SheetTitle>Capturar trecho</SheetTitle>
               </SheetHeader>
-              <CaptureForm
-                text={text}
-                source={source}
-                onSaved={() => setSaved(true)}
-                close={() => setOpen(false)}
-              />
+              {form}
             </SheetContent>
           </Sheet>
         </>
@@ -177,26 +202,35 @@ export function ParagraphCapture({
         <Popover open={open} onOpenChange={setOpen}>
           <PopoverTrigger asChild>{marker}</PopoverTrigger>
           <PopoverContent align="start" side="right" className="w-80 p-4">
-            <CaptureForm
-              text={text}
-              source={source}
-              onSaved={() => setSaved(true)}
-              close={() => setOpen(false)}
-            />
+            {form}
           </PopoverContent>
         </Popover>
       )}
 
-      <p
+      <div
         onClick={() => setOpen(true)}
         className={cn(
-          "cursor-pointer rounded-xl px-3 py-2.5 text-[15px] leading-relaxed transition-colors sm:text-base",
+          "cursor-pointer rounded-xl px-3 py-2.5 transition-colors",
           "hover:bg-marker-soft",
           saved && "bg-marker-soft/60",
         )}
       >
-        {text}
-      </p>
+        {attachment?.kind === "image" && attachment.dataUrl && (
+          <img
+            src={attachment.dataUrl}
+            alt={attachment.name}
+            className="mb-2 max-h-72 w-full rounded-xl object-contain"
+          />
+        )}
+        {text ? (
+          <p className="text-[15px] leading-relaxed sm:text-base">{text}</p>
+        ) : (
+          <p className="flex items-center gap-2 text-sm text-muted-foreground">
+            <FileText className="size-4" />
+            {attachment?.name} {attachment ? `· ${formatBytes(attachment.size)}` : null}
+          </p>
+        )}
+      </div>
     </div>
   );
 }
