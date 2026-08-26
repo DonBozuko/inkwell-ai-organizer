@@ -187,7 +187,7 @@ function AgendaPage() {
         ) : (
           <div className="grid gap-4 xl:grid-cols-2">
             {filtered.map((n) => (
-              <NoteCard key={n.id} note={n} onRemove={() => removeNote(n.id)} />
+              <NoteCard key={n.id} note={n} onRemove={() => void removeNote(n.id).catch(() => toast.error("Não foi possível excluir a nota."))} />
             ))}
           </div>
         )}
