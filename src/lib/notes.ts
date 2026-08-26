@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 
+import { supabase } from "@/integrations/supabase/client";
+
 export type CategoryId = string;
 
 export type Category = { id: CategoryId; label: string; hint: string; custom?: boolean };
@@ -139,28 +141,56 @@ export function noteToMarkdown(note: Note) {
 
 /* ---------------- categorias (pastas) ---------------- */
 
-function readCategories(): Category[] {
-  if (typeof window === "undefined") return CATEGORIES;
+let sessionPromise: ReturnType<typeof createSession> | null = null;
+
+async function createSession() {
+  const { data } = await supabase.auth.getSession();
+  if (data.session?.user) return data.session.user;
+  const { data: signed, error } = await supabase.auth.signInAnonymously();
+  if (error || !signed.user) throw new Error("Não foi possível abrir seu espaço de notas.");
+  return signed.user;
+}
+
+async function currentUser() {
+  sessionPromise ??= createSession();
+  try {
+    return await sessionPromise;
+  } catch (error) {
+    sessionPromise = null;
+    throw error;
+  }
+}
+
+function legacyCategories(): Category[] {
+  if (typeof window === "undefined") return [];
   try {
     const raw = window.localStorage.getItem(CATEGORIES_KEY);
-    const custom = raw ? (JSON.parse(raw) as Category[]) : [];
-    return [...CATEGORIES, ...custom];
-  } catch {
-    return CATEGORIES;
-  }
+    return raw ? (JSON.parse(raw) as Category[]) : [];
+  } catch { return []; }
+}
+
+let categoryCache: Category[] = CATEGORIES;
+
+async function loadCategories() {
+  const user = await currentUser();
+  const { data, error } = await supabase.from("categories").select("slug,label,hint").eq("user_id", user.id);
+  if (error) throw error;
+  const cloud = (data ?? []).map((c) => ({ id: `custom:${c.slug}`, label: c.label, hint: c.hint, custom: true }));
+  categoryCache = [...CATEGORIES, ...cloud];
+  catListeners.forEach((listener) => listener(categoryCache));
 }
 
 const catListeners = new Set<(c: Category[]) => void>();
 
 export function categoryLabel(id: CategoryId) {
-  return readCategories().find((c) => c.id === id)?.label ?? id;
+  return categoryCache.find((c) => c.id === id)?.label ?? id;
 }
 
 export function useCategories() {
   const [categories, setCategories] = useState<Category[]>(CATEGORIES);
 
   useEffect(() => {
-    setCategories(readCategories());
+    void loadCategories().catch(() => setCategories([...CATEGORIES, ...legacyCategories()]));
     const l = (c: Category[]) => setCategories(c);
     catListeners.add(l);
     return () => {
@@ -168,22 +198,23 @@ export function useCategories() {
     };
   }, []);
 
-  const addCategory = useCallback((label: string) => {
+  const addCategory = useCallback(async (label: string) => {
     const clean = label.trim();
     if (!clean) return;
-    const id = `custom:${clean.toLowerCase().replace(/\s+/g, "-")}`;
-    const current = readCategories();
-    if (current.some((c) => c.id === id)) return;
-    const custom = current.filter((c) => c.custom);
-    const next = [...custom, { id, label: clean, hint: "Pasta personalizada", custom: true }];
-    window.localStorage.setItem(CATEGORIES_KEY, JSON.stringify(next));
-    catListeners.forEach((l) => l([...CATEGORIES, ...next]));
+    const slug = clean.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
+    if (!slug || categoryCache.some((c) => c.id === `custom:${slug}`)) return;
+    const user = await currentUser();
+    const { error } = await supabase.from("categories").insert({ user_id: user.id, slug, label: clean });
+    if (error) throw error;
+    await loadCategories();
   }, []);
 
-  const removeCategory = useCallback((id: CategoryId) => {
-    const custom = readCategories().filter((c) => c.custom && c.id !== id);
-    window.localStorage.setItem(CATEGORIES_KEY, JSON.stringify(custom));
-    catListeners.forEach((l) => l([...CATEGORIES, ...custom]));
+  const removeCategory = useCallback(async (id: CategoryId) => {
+    if (!id.startsWith("custom:")) return;
+    const user = await currentUser();
+    const { error } = await supabase.from("categories").delete().eq("user_id", user.id).eq("slug", id.slice(7));
+    if (error) throw error;
+    await loadCategories();
   }, []);
 
   return { categories, addCategory, removeCategory };
@@ -191,7 +222,7 @@ export function useCategories() {
 
 /* ---------------- notas ---------------- */
 
-function read(): Note[] {
+function readLegacy(): Note[] {
   if (typeof window === "undefined") return [];
   try {
     const raw = window.localStorage.getItem(STORAGE_KEY);
@@ -202,21 +233,41 @@ function read(): Note[] {
 }
 
 const listeners = new Set<(n: Note[]) => void>();
+let noteCache: Note[] = [];
 
 function emit(notes: Note[]) {
-  try {
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(notes));
-  } catch {
-    /* quota cheia — mantém em memória */
-  }
+  noteCache = notes;
   listeners.forEach((l) => l(notes));
+}
+
+async function loadNotes() {
+  const user = await currentUser();
+  const { data, error } = await supabase.from("notes").select("*").eq("user_id", user.id).order("created_at", { ascending: false });
+  if (error) throw error;
+  const notes = await Promise.all((data ?? []).map(async (row): Promise<Note> => {
+    let dataUrl: string | undefined;
+    if (row.attachment_path && row.attachment_kind === "image") {
+      const { data: signed } = await supabase.storage.from("note-attachments").createSignedUrl(row.attachment_path, 3600);
+      dataUrl = signed?.signedUrl;
+    }
+    return {
+      id: row.id, title: row.title, text: row.text, category: row.category, tags: row.tags,
+      source: row.source, createdAt: new Date(row.created_at).getTime(),
+      ...(row.attachment_kind && row.attachment_name ? { attachment: {
+        kind: row.attachment_kind as Attachment["kind"], name: row.attachment_name,
+        mime: row.attachment_mime ?? "application/octet-stream", size: row.attachment_size ?? 0,
+        ...(dataUrl ? { dataUrl } : {}),
+      } } : {}),
+    };
+  }));
+  emit(notes);
 }
 
 export function useNotes() {
   const [notes, setNotes] = useState<Note[]>([]);
 
   useEffect(() => {
-    setNotes(read());
+    void loadNotes().catch(() => setNotes(readLegacy()));
     const listener = (n: Note[]) => setNotes(n);
     listeners.add(listener);
     return () => {
@@ -224,14 +275,39 @@ export function useNotes() {
     };
   }, []);
 
-  const addNote = useCallback((note: Omit<Note, "id" | "createdAt">) => {
-    const full: Note = { ...note, id: crypto.randomUUID(), createdAt: Date.now() };
-    emit([full, ...read()]);
-    return full;
+  const addNote = useCallback(async (note: Omit<Note, "id" | "createdAt">, file?: File) => {
+    const user = await currentUser();
+    const id = crypto.randomUUID();
+    let attachmentPath: string | null = null;
+    let uploadFile = file;
+    if (!uploadFile && note.attachment?.dataUrl) {
+      uploadFile = await fetch(note.attachment.dataUrl).then((response) => response.blob()).then((blob) => new File([blob], note.attachment?.name ?? "imagem.jpg", { type: blob.type }));
+    }
+    if (uploadFile) {
+      attachmentPath = `${user.id}/${id}/${uploadFile.name.replace(/[^a-zA-Z0-9._-]/g, "-")}`;
+      const { error: uploadError } = await supabase.storage.from("note-attachments").upload(attachmentPath, uploadFile);
+      if (uploadError) throw uploadError;
+    }
+    const { error } = await supabase.from("notes").insert({
+      id, user_id: user.id, title: note.title, text: note.text, category: note.category,
+      tags: note.tags, source: note.source, attachment_kind: note.attachment?.kind ?? null,
+      attachment_name: note.attachment?.name ?? null, attachment_mime: note.attachment?.mime ?? null,
+      attachment_size: note.attachment?.size ?? null, attachment_path: attachmentPath,
+    });
+    if (error) {
+      if (attachmentPath) await supabase.storage.from("note-attachments").remove([attachmentPath]);
+      throw error;
+    }
+    await loadNotes();
   }, []);
 
-  const removeNote = useCallback((id: string) => {
-    emit(read().filter((n) => n.id !== id));
+  const removeNote = useCallback(async (id: string) => {
+    const user = await currentUser();
+    const { data } = await supabase.from("notes").select("attachment_path").eq("id", id).eq("user_id", user.id).maybeSingle();
+    const { error } = await supabase.from("notes").delete().eq("id", id).eq("user_id", user.id);
+    if (error) throw error;
+    if (data?.attachment_path) await supabase.storage.from("note-attachments").remove([data.attachment_path]);
+    emit(noteCache.filter((note) => note.id !== id));
   }, []);
 
   return { notes, addNote, removeNote };

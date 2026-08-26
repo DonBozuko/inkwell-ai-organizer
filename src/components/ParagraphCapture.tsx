@@ -24,6 +24,7 @@ type MenuProps = {
   text: string;
   source: string;
   attachment?: Attachment;
+  file?: File;
   onSaved: () => void;
   close: () => void;
 };
@@ -33,16 +34,19 @@ function defaultTitle(text: string, attachment?: Attachment) {
   return attachment?.name.replace(/\.[^.]+$/, "") ?? "Nova nota";
 }
 
-function CaptureForm({ text, source, attachment, onSaved, close }: MenuProps) {
+function CaptureForm({ text, source, attachment, file, onSaved, close }: MenuProps) {
   const { addNote } = useNotes();
   const { categories } = useCategories();
   const [title, setTitle] = useState(() => defaultTitle(text, attachment));
   const [custom, setCustom] = useState(false);
   const [category, setCategory] = useState<CategoryId>(() => suggestCategory(text));
   const [tags, setTags] = useState(() => suggestTags(text).join(", "));
+  const [saving, setSaving] = useState(false);
 
-  const save = (cat: CategoryId) => {
-    addNote({
+  const save = async (cat: CategoryId) => {
+    setSaving(true);
+    try {
+      await addNote({
       title: title.trim() || defaultTitle(text, attachment),
       text,
       category: cat,
@@ -52,12 +56,17 @@ function CaptureForm({ text, source, attachment, onSaved, close }: MenuProps) {
         .filter(Boolean),
       source,
       ...(attachment ? { attachment } : {}),
-    });
-    toast.success(`Nota salva na pasta ${categoryLabel(cat)}!`, {
-      description: title.trim() || defaultTitle(text, attachment),
-    });
-    onSaved();
-    close();
+      }, file);
+      toast.success(`Nota salva na pasta ${categoryLabel(cat)}!`, {
+        description: title.trim() || defaultTitle(text, attachment),
+      });
+      onSaved();
+      close();
+    } catch {
+      toast.error("A nota não foi salva.", { description: "Confira sua conexão e tente novamente." });
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -81,7 +90,7 @@ function CaptureForm({ text, source, attachment, onSaved, close }: MenuProps) {
 
       {!custom ? (
         <div className="grid gap-2">
-          <Button size="lg" className="h-12 w-full gap-2" onClick={() => save(suggestCategory(text))}>
+          <Button size="lg" className="h-12 w-full gap-2" disabled={saving} onClick={() => void save(suggestCategory(text))}>
             <Wand2 className="size-4" />
             Organização Automática
           </Button>
@@ -127,8 +136,8 @@ function CaptureForm({ text, source, attachment, onSaved, close }: MenuProps) {
             </p>
             <Input value={tags} onChange={(e) => setTags(e.target.value)} className="h-12 text-base" />
           </div>
-          <Button size="lg" className="h-12 w-full" onClick={() => save(category)}>
-            Salvar na agenda
+          <Button size="lg" className="h-12 w-full" disabled={saving} onClick={() => void save(category)}>
+            {saving ? "Salvando…" : "Salvar na agenda"}
           </Button>
         </div>
       )}
@@ -141,11 +150,13 @@ export function ParagraphCapture({
   source,
   index,
   attachment,
+  file,
 }: {
   text: string;
   source: string;
   index: number;
   attachment?: Attachment;
+  file?: File;
 }) {
   const isMobile = useIsMobile();
   const [open, setOpen] = useState(false);
@@ -176,6 +187,7 @@ export function ParagraphCapture({
       text={text}
       source={source}
       {...(attachment ? { attachment } : {})}
+      {...(file ? { file } : {})}
       onSaved={() => setSaved(true)}
       close={() => setOpen(false)}
     />

@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { extractFile, type ExtractedFile } from "@/lib/files";
 import { cn } from "@/lib/utils";
 
-export type FeedItem = { text: string; attachment?: ExtractedFile["attachment"] };
+export type FeedItem = { text: string; attachment?: ExtractedFile["attachment"]; file?: File };
 
 export function UploadZone({
   onContent,
@@ -30,10 +30,10 @@ export function UploadZone({
       try {
         const result = await extractFile(file);
         if (result.attachment?.kind === "image") {
-          items.push({ text: "", attachment: result.attachment });
+          items.push({ text: "", attachment: result.attachment, file });
         } else {
           result.paragraphs.forEach((p, i) =>
-            items.push(i === 0 && result.attachment ? { text: p, attachment: result.attachment } : { text: p }),
+            items.push(i === 0 && result.attachment ? { text: p, attachment: result.attachment, file } : { text: p }),
           );
         }
       } catch (err) {
