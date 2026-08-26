@@ -196,6 +196,36 @@ function AgendaPage() {
           ))}
         </div>
 
+        <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:px-0">
+          {QUICK.map((q) => {
+            const active = quick.includes(q.id);
+            return (
+              <button
+                key={q.id}
+                type="button"
+                aria-pressed={active}
+                onClick={() => toggle(q.id)}
+                className={cn(
+                  "flex shrink-0 items-center gap-1.5 rounded-full border px-4 py-2.5 text-sm font-medium transition-colors",
+                  active
+                    ? "border-marker bg-marker text-primary-foreground"
+                    : "border-border text-muted-foreground hover:bg-accent",
+                )}
+              >
+                <q.icon className="size-4" />
+                {q.label}
+              </button>
+            );
+          })}
+          <Link
+            to="/"
+            className="flex shrink-0 items-center gap-1.5 rounded-full border border-border px-4 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent"
+          >
+            <Sparkles className="size-4" />
+            Capturar agora
+          </Link>
+        </div>
+
         {filtered.length === 0 ? (
           <div className="surface flex flex-col items-center gap-3 p-10 text-center">
             <Inbox className="size-8 text-muted-foreground" />
