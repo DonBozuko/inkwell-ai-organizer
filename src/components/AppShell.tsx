@@ -1,8 +1,8 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { Inbox, LayoutList, Moon, Sun, Sparkles } from "lucide-react";
+import { Inbox, LayoutList, Moon, Plus, Sun, Sparkles, X } from "lucide-react";
 import { useEffect, useState, type ReactNode } from "react";
 
-import { CATEGORIES, useNotes } from "@/lib/notes";
+import { useCategories, useNotes } from "@/lib/notes";
 import { cn } from "@/lib/utils";
 
 const NAV = [
