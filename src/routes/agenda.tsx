@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Clock, Download, Inbox, Link2, Share2, Trash2 } from "lucide-react";
+import { Clock, Download, FileText, Inbox, Link2, Share2, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
 import { AppShell } from "@/components/AppShell";
@@ -145,6 +145,7 @@ function NoteCard({ note, onRemove }: { note: Note; onRemove: () => void }) {
 function AgendaPage() {
   const { cat } = Route.useSearch();
   const { notes, removeNote } = useNotes();
+  const { categories } = useCategories();
   const filtered = cat !== "todas" ? notes.filter((n) => n.category === cat) : notes;
 
   return (
@@ -158,7 +159,7 @@ function AgendaPage() {
         </div>
 
         <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:px-0">
-          {[{ id: "todas", label: "Todas" }, ...CATEGORIES].map((c) => (
+          {[{ id: "todas", label: "Todas" }, ...categories].map((c) => (
             <Link
               key={c.id}
               to="/agenda"
