@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Clock, Download, FileText, Inbox, Link2, Share2, Trash2 } from "lucide-react";
+import { Clock, Download, FileText, Inbox, Link2, ListTodo, Paperclip, Share2, Sparkles, Trash2 } from "lucide-react";
+import { useState } from "react";
 import { toast } from "sonner";
 
 import { AppShell } from "@/components/AppShell";
