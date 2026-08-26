@@ -1,5 +1,5 @@
 import { FileUp, FolderUp, ImageUp, Loader2 } from "lucide-react";
-import { useRef, useState, type ChangeEvent, type DragEvent } from "react";
+import { useEffect, useRef, useState, type ChangeEvent, type DragEvent, type MutableRefObject } from "react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
