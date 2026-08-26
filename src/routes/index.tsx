@@ -1,18 +1,30 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { ClipboardPaste, Link2, Loader2, Sparkles } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 
 import { AppShell } from "@/components/AppShell";
+import { FeatureGrid } from "@/components/FeatureGrid";
 import { ParagraphCapture } from "@/components/ParagraphCapture";
 import { UploadZone, type FeedItem } from "@/components/UploadZone";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { readUrl } from "@/lib/reader.functions";
-import { isUrl, normalizeUrl, toParagraphs } from "@/lib/notes";
+import {
+  SAMPLE_TEXT,
+  exportNotesMarkdown,
+  featureById,
+  toggleTheme,
+  type Feature,
+} from "@/lib/features";
+import { isUrl, normalizeUrl, toParagraphs, useNotes } from "@/lib/notes";
+
+type Search = { action?: string };
 
 export const Route = createFileRoute("/")({
+  validateSearch: (search: Record<string, unknown>): Search =>
+    typeof search["action"] === "string" ? { action: search["action"] } : {},
   head: () => ({
     meta: [
       { title: "Captura Inteligente — Agenda por Captura" },
@@ -33,22 +45,95 @@ export const Route = createFileRoute("/")({
   component: CapturePage,
 });
 
-const SAMPLE = `A produtividade real não vem de fazer mais coisas, e sim de decidir melhor o que merece sua atenção hoje.
-
-Ideia importante: capturar é diferente de organizar. Capture rápido, organize depois, em lotes curtos.
-
-Tarefa: revisar o roteiro do projeto com a equipe até sexta e definir o prazo de entrega do cliente.
-
-Estudo: o conceito de carga cognitiva mostra que a memória de trabalho comporta poucos itens por vez.`;
+const SAMPLE = SAMPLE_TEXT;
 
 function CapturePage() {
+  const { action } = Route.useSearch();
+  const navigate = useNavigate();
+  const { notes } = useNotes();
   const [raw, setRaw] = useState("");
   const [loading, setLoading] = useState(false);
   const [content, setContent] = useState<{ items: FeedItem[]; source: string } | null>(null);
   const fetchUrl = useServerFn(readUrl);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const openUpload = useRef<(() => void) | null>(null);
 
   const setText = (text: string, source: string) =>
     setContent({ items: toParagraphs(text).map((t) => ({ text: t })), source });
+
+  const focusField = () => {
+    const field = textareaRef.current;
+    if (!field) return;
+    field.focus();
+    field.setSelectionRange(field.value.length, field.value.length);
+  };
+
+  const pasteFromClipboard = async () => {
+    try {
+      const text = await navigator.clipboard.readText();
+      if (!text.trim()) throw new Error("empty");
+      setRaw(text);
+      setTimeout(focusField, 0);
+      toast.success("Conteúdo colado da área de transferência.");
+    } catch {
+      setTimeout(focusField, 0);
+      toast.info("Cole diretamente no campo de texto.", {
+        description: "No celular, toque e segure dentro do campo e escolha Colar. No PC, use Ctrl+V.",
+      });
+    }
+  };
+
+  const runFeature = (feature: Feature) => {
+    switch (feature.action) {
+      case "prefill":
+        setRaw(feature.template ?? "");
+        setTimeout(focusField, 0);
+        toast.success(`${feature.title}: escreva e toque em Processar conteúdo.`);
+        return;
+      case "clipboard":
+        void pasteFromClipboard();
+        return;
+      case "upload":
+        openUpload.current?.();
+        return;
+      case "sample":
+        setRaw(SAMPLE);
+        setText(SAMPLE, "Exemplo");
+        setTimeout(focusField, 0);
+        return;
+      case "open-agenda":
+        void navigate({ to: "/agenda", search: { cat: "todas" } });
+        return;
+      case "new-folder":
+        void navigate({ to: "/agenda", search: { cat: "todas" } });
+        toast.info("Crie a pasta na lista de categorias.", {
+          description: "Use “Nova pasta” na barra lateral (ou no menu de categorias).",
+        });
+        return;
+      case "export-md":
+        if (!exportNotesMarkdown(notes)) {
+          toast.info("Nenhuma nota para exportar ainda.");
+          return;
+        }
+        toast.success("Exportação iniciada!", { description: "Arquivo .md salvo no dispositivo." });
+        return;
+      case "toggle-theme": {
+        const dark = toggleTheme();
+        toast.success(dark ? "Modo escuro ativado." : "Modo claro ativado.");
+        return;
+      }
+      default:
+        toast.info("Função em breve.");
+    }
+  };
+
+  useEffect(() => {
+    if (!action) return;
+    const feature = featureById(action);
+    void navigate({ to: "/", search: {}, replace: true });
+    if (feature) runFeature(feature);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [action]);
 
   const process = async () => {
     const value = raw.trim();
@@ -89,7 +174,15 @@ function CapturePage() {
             Cole um link, um texto copiado — ou envie PDFs, imagens e pastas inteiras.
           </p>
 
+          <div className="mt-4">
+            <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+              Melhores funções
+            </p>
+            <FeatureGrid variant="compact" onSelect={runFeature} />
+          </div>
+
           <Textarea
+            ref={textareaRef}
             value={raw}
             onChange={(e) => setRaw(e.target.value)}
             placeholder="https://exemplo.com/artigo  ou  cole aqui o texto copiado…"
@@ -101,23 +194,7 @@ function CapturePage() {
               {loading ? <Loader2 className="size-4 animate-spin" /> : <Sparkles className="size-4" />}
               Processar conteúdo
             </Button>
-            <Button
-              size="lg"
-              variant="outline"
-              className="h-12 gap-2"
-              onClick={async () => {
-                try {
-                  setRaw(await navigator.clipboard.readText());
-                  toast.success("Conteúdo colado da área de transferência.");
-                } catch {
-                  const field = document.querySelector<HTMLTextAreaElement>("textarea");
-                  field?.focus();
-                  toast.info("Cole diretamente no campo de texto.", {
-                    description: "No celular, toque e segure dentro do campo e escolha Colar.",
-                  });
-                }
-              }}
-            >
+            <Button size="lg" variant="outline" className="h-12 gap-2" onClick={() => void pasteFromClipboard()}>
               <ClipboardPaste className="size-4" />
               Colar
             </Button>
@@ -135,7 +212,10 @@ function CapturePage() {
           </div>
 
           <div className="mt-5">
-            <UploadZone onContent={(items, source) => setContent({ items, source })} />
+            <UploadZone
+              openRef={openUpload}
+              onContent={(items, source) => setContent({ items, source })}
+            />
           </div>
         </section>
 
