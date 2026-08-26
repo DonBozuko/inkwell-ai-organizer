@@ -1,15 +1,16 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Clock, Download, Inbox, Link2, Share2, Trash2 } from "lucide-react";
+import { Clock, Download, FileText, Inbox, Link2, Share2, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
 import { AppShell } from "@/components/AppShell";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
-  CATEGORIES,
   categoryLabel,
+  formatBytes,
   formatDate,
   noteToMarkdown,
+  useCategories,
   useNotes,
   type CategoryId,
   type Note,
@@ -82,7 +83,26 @@ function NoteCard({ note, onRemove }: { note: Note; onRemove: () => void }) {
         <Badge className="shrink-0 border-0 bg-marker-soft text-marker">{categoryLabel(note.category)}</Badge>
       </header>
 
-      <p className="mt-3 whitespace-pre-line text-sm leading-relaxed text-muted-foreground">{note.text}</p>
+      {note.attachment?.kind === "image" && note.attachment.dataUrl && (
+        <img
+          src={note.attachment.dataUrl}
+          alt={note.attachment.name}
+          className="mt-3 max-h-64 w-full rounded-xl object-cover"
+        />
+      )}
+
+      {note.text && (
+        <p className="mt-3 whitespace-pre-line text-sm leading-relaxed text-muted-foreground">{note.text}</p>
+      )}
+
+      {note.attachment?.kind === "file" && (
+        <p className="mt-3 flex items-center gap-1.5 text-xs text-muted-foreground">
+          <FileText className="size-3.5 shrink-0" />
+          <span className="truncate">
+            {note.attachment.name} · {formatBytes(note.attachment.size)}
+          </span>
+        </p>
+      )}
 
       {note.tags.length > 0 && (
         <div className="mt-3 flex flex-wrap gap-1.5">
@@ -125,6 +145,7 @@ function NoteCard({ note, onRemove }: { note: Note; onRemove: () => void }) {
 function AgendaPage() {
   const { cat } = Route.useSearch();
   const { notes, removeNote } = useNotes();
+  const { categories } = useCategories();
   const filtered = cat !== "todas" ? notes.filter((n) => n.category === cat) : notes;
 
   return (
@@ -138,7 +159,7 @@ function AgendaPage() {
         </div>
 
         <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:px-0">
-          {[{ id: "todas", label: "Todas" }, ...CATEGORIES].map((c) => (
+          {[{ id: "todas", label: "Todas" }, ...categories].map((c) => (
             <Link
               key={c.id}
               to="/agenda"

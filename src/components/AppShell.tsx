@@ -1,8 +1,8 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { Inbox, LayoutList, Moon, Sun, Sparkles } from "lucide-react";
+import { Inbox, LayoutList, Moon, Plus, Sun, Sparkles, X } from "lucide-react";
 import { useEffect, useState, type ReactNode } from "react";
 
-import { CATEGORIES, useNotes } from "@/lib/notes";
+import { useCategories, useNotes } from "@/lib/notes";
 import { cn } from "@/lib/utils";
 
 const NAV = [
@@ -39,27 +39,71 @@ function ThemeToggle() {
 
 function CategoryList() {
   const { notes } = useNotes();
+  const { categories, addCategory, removeCategory } = useCategories();
+  const [adding, setAdding] = useState(false);
+  const [label, setLabel] = useState("");
+
   return (
     <div className="space-y-1">
       <p className="px-3 pb-2 text-xs font-semibold uppercase tracking-widest text-muted-foreground">
         Categorias da IA
       </p>
-      {CATEGORIES.map((c) => (
-        <Link
-          key={c.id}
-          to="/agenda"
-          search={{ cat: c.id }}
-          className="flex items-center justify-between rounded-xl px-3 py-2.5 text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-        >
-          <span className="flex min-w-0 items-center gap-2.5">
-            <span className="size-2 shrink-0 rounded-full bg-marker" />
-            <span className="truncate">{c.label}</span>
-          </span>
-          <span className="shrink-0 text-xs tabular-nums">
-            {notes.filter((n) => n.category === c.id).length}
-          </span>
-        </Link>
+      {categories.map((c) => (
+        <div key={c.id} className="group/cat flex items-center">
+          <Link
+            to="/agenda"
+            search={{ cat: c.id }}
+            className="flex min-w-0 flex-1 items-center justify-between rounded-xl px-3 py-2.5 text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+          >
+            <span className="flex min-w-0 items-center gap-2.5">
+              <span className="size-2 shrink-0 rounded-full bg-marker" />
+              <span className="truncate">{c.label}</span>
+            </span>
+            <span className="shrink-0 text-xs tabular-nums">
+              {notes.filter((n) => n.category === c.id).length}
+            </span>
+          </Link>
+          {c.custom && (
+            <button
+              type="button"
+              aria-label={`Remover pasta ${c.label}`}
+              onClick={() => removeCategory(c.id)}
+              className="ml-1 shrink-0 rounded-lg p-1.5 text-muted-foreground opacity-0 transition-opacity hover:text-foreground group-hover/cat:opacity-100"
+            >
+              <X className="size-3.5" />
+            </button>
+          )}
+        </div>
       ))}
+
+      {adding ? (
+        <form
+          className="px-3 pt-2"
+          onSubmit={(e) => {
+            e.preventDefault();
+            addCategory(label);
+            setLabel("");
+            setAdding(false);
+          }}
+        >
+          <input
+            autoFocus
+            value={label}
+            onChange={(e) => setLabel(e.target.value)}
+            onBlur={() => setAdding(false)}
+            placeholder="Nome da pasta"
+            className="w-full rounded-xl border border-border bg-background px-3 py-2 text-sm outline-none focus:border-marker"
+          />
+        </form>
+      ) : (
+        <button
+          type="button"
+          onClick={() => setAdding(true)}
+          className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+        >
+          <Plus className="size-4" /> Nova pasta
+        </button>
+      )}
     </div>
   );
 }
