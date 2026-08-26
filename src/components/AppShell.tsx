@@ -67,7 +67,7 @@ function CategoryList() {
             <button
               type="button"
               aria-label={`Remover pasta ${c.label}`}
-              onClick={() => removeCategory(c.id)}
+              onClick={() => void removeCategory(c.id)}
               className="ml-1 shrink-0 rounded-lg p-1.5 text-muted-foreground opacity-0 transition-opacity hover:text-foreground group-hover/cat:opacity-100"
             >
               <X className="size-3.5" />
@@ -81,7 +81,7 @@ function CategoryList() {
           className="px-3 pt-2"
           onSubmit={(e) => {
             e.preventDefault();
-            addCategory(label);
+            void addCategory(label);
             setLabel("");
             setAdding(false);
           }}

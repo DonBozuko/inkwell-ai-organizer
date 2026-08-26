@@ -149,6 +149,7 @@ function CapturePage() {
                   text={item.text}
                   source={content.source}
                   {...(item.attachment ? { attachment: item.attachment } : {})}
+                  {...(item.file ? { file: item.file } : {})}
                 />
               ))}
             </div>
