@@ -1,6 +1,7 @@
 import { Link, useRouterState } from "@tanstack/react-router";
 import { Inbox, LayoutList, Moon, Plus, Sun, Sparkles, X } from "lucide-react";
 import { useEffect, useState, type ReactNode } from "react";
+import { toast } from "sonner";
 
 import { useCategories, useNotes } from "@/lib/notes";
 import { cn } from "@/lib/utils";
@@ -67,7 +68,7 @@ function CategoryList() {
             <button
               type="button"
               aria-label={`Remover pasta ${c.label}`}
-              onClick={() => void removeCategory(c.id)}
+              onClick={() => void removeCategory(c.id).catch(() => toast.error("Não foi possível remover a pasta."))}
               className="ml-1 shrink-0 rounded-lg p-1.5 text-muted-foreground opacity-0 transition-opacity hover:text-foreground group-hover/cat:opacity-100"
             >
               <X className="size-3.5" />
@@ -81,7 +82,11 @@ function CategoryList() {
           className="px-3 pt-2"
           onSubmit={(e) => {
             e.preventDefault();
-            void addCategory(label);
+            void addCategory(label).catch((error) =>
+              toast.error("Não foi possível criar a pasta.", {
+                description: error instanceof Error ? error.message : undefined,
+              }),
+            );
             setLabel("");
             setAdding(false);
           }}

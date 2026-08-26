@@ -110,7 +110,11 @@ function CapturePage() {
                   setRaw(await navigator.clipboard.readText());
                   toast.success("Conteúdo colado da área de transferência.");
                 } catch {
-                  toast.error("Permissão de colagem negada.");
+                  const field = document.querySelector<HTMLTextAreaElement>("textarea");
+                  field?.focus();
+                  toast.info("Cole diretamente no campo de texto.", {
+                    description: "No celular, toque e segure dentro do campo e escolha Colar.",
+                  });
                 }
               }}
             >
