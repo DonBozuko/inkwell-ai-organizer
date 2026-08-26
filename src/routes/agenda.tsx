@@ -142,11 +142,30 @@ function NoteCard({ note, onRemove }: { note: Note; onRemove: () => void }) {
   );
 }
 
+const QUICK = [
+  { id: "hoje", label: "Hoje", icon: Clock },
+  { id: "anexo", label: "Com anexo", icon: Paperclip },
+  { id: "tarefas", label: "Tarefas", icon: ListTodo },
+] as const;
+
+type QuickId = (typeof QUICK)[number]["id"];
+
 function AgendaPage() {
   const { cat } = Route.useSearch();
   const { notes, removeNote } = useNotes();
   const { categories } = useCategories();
-  const filtered = cat !== "todas" ? notes.filter((n) => n.category === cat) : notes;
+  const [quick, setQuick] = useState<QuickId[]>([]);
+
+  const byCat = cat !== "todas" ? notes.filter((n) => n.category === cat) : notes;
+  const filtered = byCat.filter((n) => {
+    if (quick.includes("hoje") && Date.now() - n.createdAt > 24 * 60 * 60 * 1000) return false;
+    if (quick.includes("anexo") && !n.attachment) return false;
+    if (quick.includes("tarefas") && n.category !== "tarefas") return false;
+    return true;
+  });
+
+  const toggle = (id: QuickId) =>
+    setQuick((prev) => (prev.includes(id) ? prev.filter((q) => q !== id) : [...prev, id]));
 
   return (
     <AppShell>
