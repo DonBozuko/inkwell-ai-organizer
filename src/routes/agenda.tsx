@@ -83,7 +83,26 @@ function NoteCard({ note, onRemove }: { note: Note; onRemove: () => void }) {
         <Badge className="shrink-0 border-0 bg-marker-soft text-marker">{categoryLabel(note.category)}</Badge>
       </header>
 
-      <p className="mt-3 whitespace-pre-line text-sm leading-relaxed text-muted-foreground">{note.text}</p>
+      {note.attachment?.kind === "image" && note.attachment.dataUrl && (
+        <img
+          src={note.attachment.dataUrl}
+          alt={note.attachment.name}
+          className="mt-3 max-h-64 w-full rounded-xl object-cover"
+        />
+      )}
+
+      {note.text && (
+        <p className="mt-3 whitespace-pre-line text-sm leading-relaxed text-muted-foreground">{note.text}</p>
+      )}
+
+      {note.attachment?.kind === "file" && (
+        <p className="mt-3 flex items-center gap-1.5 text-xs text-muted-foreground">
+          <FileText className="size-3.5 shrink-0" />
+          <span className="truncate">
+            {note.attachment.name} · {formatBytes(note.attachment.size)}
+          </span>
+        </p>
+      )}
 
       {note.tags.length > 0 && (
         <div className="mt-3 flex flex-wrap gap-1.5">
