@@ -16,11 +16,11 @@ import {
 } from "@/lib/notes";
 import { cn } from "@/lib/utils";
 
-type Search = { cat?: CategoryId | "todas" };
+type Search = { cat: CategoryId | "todas" };
 
 export const Route = createFileRoute("/agenda")({
   validateSearch: (search: Record<string, unknown>): Search => ({
-    cat: (search["cat"] as Search["cat"]) ?? "todas",
+    cat: (search["cat"] as Search["cat"]) || "todas",
   }),
   head: () => ({
     meta: [
@@ -125,7 +125,7 @@ function NoteCard({ note, onRemove }: { note: Note; onRemove: () => void }) {
 function AgendaPage() {
   const { cat } = Route.useSearch();
   const { notes, removeNote } = useNotes();
-  const filtered = cat && cat !== "todas" ? notes.filter((n) => n.category === cat) : notes;
+  const filtered = cat !== "todas" ? notes.filter((n) => n.category === cat) : notes;
 
   return (
     <AppShell>
