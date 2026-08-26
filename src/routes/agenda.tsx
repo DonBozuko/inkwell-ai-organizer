@@ -6,10 +6,11 @@ import { AppShell } from "@/components/AppShell";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
-  CATEGORIES,
   categoryLabel,
+  formatBytes,
   formatDate,
   noteToMarkdown,
+  useCategories,
   useNotes,
   type CategoryId,
   type Note,
