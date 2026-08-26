@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Clock, Download, FileText, Inbox, Link2, Share2, Trash2 } from "lucide-react";
+import { Clock, Download, FileText, Inbox, Link2, ListTodo, Paperclip, Share2, Sparkles, Trash2 } from "lucide-react";
+import { useState } from "react";
 import { toast } from "sonner";
 
 import { AppShell } from "@/components/AppShell";
@@ -142,11 +143,30 @@ function NoteCard({ note, onRemove }: { note: Note; onRemove: () => void }) {
   );
 }
 
+const QUICK = [
+  { id: "hoje", label: "Hoje", icon: Clock },
+  { id: "anexo", label: "Com anexo", icon: Paperclip },
+  { id: "tarefas", label: "Tarefas", icon: ListTodo },
+] as const;
+
+type QuickId = (typeof QUICK)[number]["id"];
+
 function AgendaPage() {
   const { cat } = Route.useSearch();
   const { notes, removeNote } = useNotes();
   const { categories } = useCategories();
-  const filtered = cat !== "todas" ? notes.filter((n) => n.category === cat) : notes;
+  const [quick, setQuick] = useState<QuickId[]>([]);
+
+  const byCat = cat !== "todas" ? notes.filter((n) => n.category === cat) : notes;
+  const filtered = byCat.filter((n) => {
+    if (quick.includes("hoje") && Date.now() - n.createdAt > 24 * 60 * 60 * 1000) return false;
+    if (quick.includes("anexo") && !n.attachment) return false;
+    if (quick.includes("tarefas") && n.category !== "tarefas") return false;
+    return true;
+  });
+
+  const toggle = (id: QuickId) =>
+    setQuick((prev) => (prev.includes(id) ? prev.filter((q) => q !== id) : [...prev, id]));
 
   return (
     <AppShell>
@@ -174,6 +194,36 @@ function AgendaPage() {
               {c.label}
             </Link>
           ))}
+        </div>
+
+        <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:px-0">
+          {QUICK.map((q) => {
+            const active = quick.includes(q.id);
+            return (
+              <button
+                key={q.id}
+                type="button"
+                aria-pressed={active}
+                onClick={() => toggle(q.id)}
+                className={cn(
+                  "flex shrink-0 items-center gap-1.5 rounded-full border px-4 py-2.5 text-sm font-medium transition-colors",
+                  active
+                    ? "border-marker bg-marker text-primary-foreground"
+                    : "border-border text-muted-foreground hover:bg-accent",
+                )}
+              >
+                <q.icon className="size-4" />
+                {q.label}
+              </button>
+            );
+          })}
+          <Link
+            to="/"
+            className="flex shrink-0 items-center gap-1.5 rounded-full border border-border px-4 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent"
+          >
+            <Sparkles className="size-4" />
+            Capturar agora
+          </Link>
         </div>
 
         {filtered.length === 0 ? (

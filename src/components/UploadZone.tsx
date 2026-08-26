@@ -1,5 +1,5 @@
 import { FileUp, FolderUp, ImageUp, Loader2 } from "lucide-react";
-import { useRef, useState, type ChangeEvent, type DragEvent } from "react";
+import { useEffect, useRef, useState, type ChangeEvent, type DragEvent, type MutableRefObject } from "react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -10,14 +10,25 @@ export type FeedItem = { text: string; attachment?: ExtractedFile["attachment"];
 
 export function UploadZone({
   onContent,
+  openRef,
 }: {
   onContent: (items: FeedItem[], source: string) => void;
+  /** Permite acionar o seletor de arquivos de fora do componente. */
+  openRef?: MutableRefObject<(() => void) | null>;
 }) {
   const fileInput = useRef<HTMLInputElement>(null);
   const folderInput = useRef<HTMLInputElement>(null);
   const imageInput = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
   const [over, setOver] = useState(false);
+
+  useEffect(() => {
+    if (!openRef) return;
+    openRef.current = () => fileInput.current?.click();
+    return () => {
+      openRef.current = null;
+    };
+  }, [openRef]);
 
   const handleFiles = async (list: FileList | null) => {
     const files = Array.from(list ?? []);
