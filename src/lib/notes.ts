@@ -1,13 +1,24 @@
 import { useCallback, useEffect, useState } from "react";
 
-export type CategoryId = "insights" | "estudos" | "trabalho" | "tarefas";
+export type CategoryId = string;
 
-export const CATEGORIES: { id: CategoryId; label: string; hint: string }[] = [
+export type Category = { id: CategoryId; label: string; hint: string; custom?: boolean };
+
+export const CATEGORIES: Category[] = [
   { id: "insights", label: "Insights", hint: "Ideias e reflexões" },
   { id: "estudos", label: "Estudos", hint: "Aprendizados e resumos" },
   { id: "trabalho", label: "Trabalho", hint: "Projetos e reuniões" },
   { id: "tarefas", label: "Tarefas", hint: "Ações e pendências" },
 ];
+
+export type Attachment = {
+  kind: "image" | "file";
+  name: string;
+  mime: string;
+  size: number;
+  /** data URL — presente apenas para imagens (redimensionadas). */
+  dataUrl?: string;
+};
 
 export type Note = {
   id: string;
@@ -17,9 +28,11 @@ export type Note = {
   tags: string[];
   source: string;
   createdAt: number;
+  attachment?: Attachment;
 };
 
 const STORAGE_KEY = "agenda-inteligente:notes";
+const CATEGORIES_KEY = "agenda-inteligente:categories";
 
 const RULES: { id: CategoryId; words: string[] }[] = [
   {
@@ -86,7 +99,12 @@ function capitalize(s: string) {
 }
 
 export function isUrl(value: string) {
-  return /^https?:\/\/\S+$/i.test(value.trim());
+  return /^(https?:\/\/|www\.)\S+$/i.test(value.trim());
+}
+
+export function normalizeUrl(value: string) {
+  const v = value.trim();
+  return /^https?:\/\//i.test(v) ? v : `https://${v}`;
 }
 
 /** Splits raw pasted content into readable paragraphs/stanzas. */
@@ -107,15 +125,71 @@ export function formatDate(ts: number) {
   });
 }
 
+export function formatBytes(bytes: number) {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} KB`;
+  return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
+}
+
 export function noteToMarkdown(note: Note) {
   return `# ${note.title}\n\n${note.text}\n\n---\nCategoria: ${categoryLabel(note.category)}\nTags: ${note.tags
     .map((t) => `#${t}`)
     .join(" ")}\nCapturado em: ${formatDate(note.createdAt)}\nOrigem: ${note.source}\n`;
 }
 
-export function categoryLabel(id: CategoryId) {
-  return CATEGORIES.find((c) => c.id === id)?.label ?? id;
+/* ---------------- categorias (pastas) ---------------- */
+
+function readCategories(): Category[] {
+  if (typeof window === "undefined") return CATEGORIES;
+  try {
+    const raw = window.localStorage.getItem(CATEGORIES_KEY);
+    const custom = raw ? (JSON.parse(raw) as Category[]) : [];
+    return [...CATEGORIES, ...custom];
+  } catch {
+    return CATEGORIES;
+  }
 }
+
+const catListeners = new Set<(c: Category[]) => void>();
+
+export function categoryLabel(id: CategoryId) {
+  return readCategories().find((c) => c.id === id)?.label ?? id;
+}
+
+export function useCategories() {
+  const [categories, setCategories] = useState<Category[]>(CATEGORIES);
+
+  useEffect(() => {
+    setCategories(readCategories());
+    const l = (c: Category[]) => setCategories(c);
+    catListeners.add(l);
+    return () => {
+      catListeners.delete(l);
+    };
+  }, []);
+
+  const addCategory = useCallback((label: string) => {
+    const clean = label.trim();
+    if (!clean) return;
+    const id = `custom:${clean.toLowerCase().replace(/\s+/g, "-")}`;
+    const current = readCategories();
+    if (current.some((c) => c.id === id)) return;
+    const custom = current.filter((c) => c.custom);
+    const next = [...custom, { id, label: clean, hint: "Pasta personalizada", custom: true }];
+    window.localStorage.setItem(CATEGORIES_KEY, JSON.stringify(next));
+    catListeners.forEach((l) => l([...CATEGORIES, ...next]));
+  }, []);
+
+  const removeCategory = useCallback((id: CategoryId) => {
+    const custom = readCategories().filter((c) => c.custom && c.id !== id);
+    window.localStorage.setItem(CATEGORIES_KEY, JSON.stringify(custom));
+    catListeners.forEach((l) => l([...CATEGORIES, ...custom]));
+  }, []);
+
+  return { categories, addCategory, removeCategory };
+}
+
+/* ---------------- notas ---------------- */
 
 function read(): Note[] {
   if (typeof window === "undefined") return [];
@@ -130,7 +204,11 @@ function read(): Note[] {
 const listeners = new Set<(n: Note[]) => void>();
 
 function emit(notes: Note[]) {
-  window.localStorage.setItem(STORAGE_KEY, JSON.stringify(notes));
+  try {
+    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(notes));
+  } catch {
+    /* quota cheia — mantém em memória */
+  }
   listeners.forEach((l) => l(notes));
 }
 
