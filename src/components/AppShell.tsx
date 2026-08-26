@@ -1,36 +1,35 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { Inbox, LayoutList, Moon, Plus, Sun, Sparkles, X } from "lucide-react";
+import { Inbox, LayoutList, Moon, Plus, Sun, Sparkles, Wand2, X } from "lucide-react";
 import { useEffect, useState, type ReactNode } from "react";
 import { toast } from "sonner";
 
+import { THEME_EVENT, isDarkTheme, applyTheme } from "@/lib/features";
 import { useCategories, useNotes } from "@/lib/notes";
 import { cn } from "@/lib/utils";
 
 const NAV = [
   { to: "/", label: "Captura", icon: Inbox },
   { to: "/agenda", label: "Agenda", icon: LayoutList },
+  { to: "/funcoes", label: "Funções", icon: Wand2 },
 ] as const;
 
 function ThemeToggle() {
   const [dark, setDark] = useState(false);
 
   useEffect(() => {
-    const stored = window.localStorage.getItem("agenda-theme");
-    const isDark = stored ? stored === "dark" : window.matchMedia("(prefers-color-scheme: dark)").matches;
+    const isDark = isDarkTheme();
     setDark(isDark);
     document.documentElement.classList.toggle("dark", isDark);
+    const onChange = (event: Event) => setDark((event as CustomEvent<boolean>).detail);
+    window.addEventListener(THEME_EVENT, onChange);
+    return () => window.removeEventListener(THEME_EVENT, onChange);
   }, []);
 
   return (
     <button
       type="button"
       aria-label="Alternar tema"
-      onClick={() => {
-        const next = !dark;
-        setDark(next);
-        document.documentElement.classList.toggle("dark", next);
-        window.localStorage.setItem("agenda-theme", next ? "dark" : "light");
-      }}
+      onClick={() => applyTheme(!dark)}
       className="flex size-11 items-center justify-center rounded-full border border-border text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
     >
       {dark ? <Sun className="size-5" /> : <Moon className="size-5" />}
