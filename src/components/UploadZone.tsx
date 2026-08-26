@@ -84,7 +84,7 @@ export function UploadZone({
       </p>
 
       <div className="mt-4 grid gap-2 sm:grid-cols-3">
-        <Button variant="outline" size="lg" className="h-12 gap-2" disabled={busy} onClick={() => fileInput.current?.click()}>
+        <Button variant="outline" size="lg" className="h-12 gap-2" disabled={busy} onClick={() => { console.log("click arquivos", !!fileInput.current); fileInput.current?.click(); }}>
           {busy ? <Loader2 className="size-4 animate-spin" /> : <FileUp className="size-4" />}
           Arquivos
         </Button>
