@@ -62,8 +62,10 @@ function CaptureForm({ text, source, attachment, file, onSaved, close }: MenuPro
       });
       onSaved();
       close();
-    } catch {
-      toast.error("A nota não foi salva.", { description: "Confira sua conexão e tente novamente." });
+    } catch (error) {
+      toast.error("A nota não foi salva.", {
+        description: error instanceof Error ? error.message : "Verifique o espaço disponível no dispositivo.",
+      });
     } finally {
       setSaving(false);
     }

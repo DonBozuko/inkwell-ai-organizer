@@ -1,7 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
 
-import { supabase } from "@/integrations/supabase/client";
-
 export type CategoryId = string;
 
 export type Category = { id: CategoryId; label: string; hint: string; custom?: boolean };
@@ -139,26 +137,66 @@ export function noteToMarkdown(note: Note) {
     .join(" ")}\nCapturado em: ${formatDate(note.createdAt)}\nOrigem: ${note.source}\n`;
 }
 
-/* ---------------- categorias (pastas) ---------------- */
+/* ---------------- armazenamento local durável ---------------- */
 
-let sessionPromise: ReturnType<typeof createSession> | null = null;
+const DB_NAME = "agenda-inteligente";
+const DB_VERSION = 1;
+const NOTES_STORE = "notes";
+const CATEGORIES_STORE = "categories";
 
-async function createSession() {
-  const { data } = await supabase.auth.getSession();
-  if (data.session?.user) return data.session.user;
-  const { data: signed, error } = await supabase.auth.signInAnonymously();
-  if (error || !signed.user) throw new Error("Não foi possível abrir seu espaço de notas.");
-  return signed.user;
+type StoredNote = Note & { attachmentBlob?: Blob };
+
+function openDatabase(): Promise<IDBDatabase> {
+  return new Promise((resolve, reject) => {
+    if (typeof indexedDB === "undefined") {
+      reject(new Error("Este navegador não oferece armazenamento local durável."));
+      return;
+    }
+    const request = indexedDB.open(DB_NAME, DB_VERSION);
+    request.onupgradeneeded = () => {
+      const db = request.result;
+      if (!db.objectStoreNames.contains(NOTES_STORE)) {
+        db.createObjectStore(NOTES_STORE, { keyPath: "id" });
+      }
+      if (!db.objectStoreNames.contains(CATEGORIES_STORE)) {
+        db.createObjectStore(CATEGORIES_STORE, { keyPath: "id" });
+      }
+    };
+    request.onsuccess = () => resolve(request.result);
+    request.onerror = () => reject(request.error ?? new Error("Falha ao abrir o armazenamento local."));
+  });
 }
 
-async function currentUser() {
-  sessionPromise ??= createSession();
-  try {
-    return await sessionPromise;
-  } catch (error) {
-    sessionPromise = null;
-    throw error;
-  }
+async function getAll<T>(storeName: string): Promise<T[]> {
+  const db = await openDatabase();
+  return new Promise((resolve, reject) => {
+    const transaction = db.transaction(storeName, "readonly");
+    const request = transaction.objectStore(storeName).getAll();
+    request.onsuccess = () => resolve(request.result as T[]);
+    request.onerror = () => reject(request.error ?? new Error("Falha ao ler dados locais."));
+    transaction.oncomplete = () => db.close();
+  });
+}
+
+async function putValue<T>(storeName: string, value: T): Promise<void> {
+  const db = await openDatabase();
+  return new Promise((resolve, reject) => {
+    const transaction = db.transaction(storeName, "readwrite");
+    transaction.objectStore(storeName).put(value);
+    transaction.oncomplete = () => { db.close(); resolve(); };
+    transaction.onerror = () => { db.close(); reject(transaction.error ?? new Error("Falha ao salvar no dispositivo.")); };
+    transaction.onabort = () => { db.close(); reject(transaction.error ?? new Error("Espaço insuficiente no dispositivo.")); };
+  });
+}
+
+async function deleteValue(storeName: string, key: IDBValidKey): Promise<void> {
+  const db = await openDatabase();
+  return new Promise((resolve, reject) => {
+    const transaction = db.transaction(storeName, "readwrite");
+    transaction.objectStore(storeName).delete(key);
+    transaction.oncomplete = () => { db.close(); resolve(); };
+    transaction.onerror = () => { db.close(); reject(transaction.error ?? new Error("Falha ao excluir dado local.")); };
+  });
 }
 
 function legacyCategories(): Category[] {
@@ -169,145 +207,115 @@ function legacyCategories(): Category[] {
   } catch { return []; }
 }
 
+function readLegacy(): Note[] {
+  if (typeof window === "undefined") return [];
+  try {
+    const raw = window.localStorage.getItem(STORAGE_KEY);
+    return raw ? (JSON.parse(raw) as Note[]) : [];
+  } catch { return []; }
+}
+
 let categoryCache: Category[] = CATEGORIES;
+const catListeners = new Set<(categories: Category[]) => void>();
+const noteListeners = new Set<(notes: Note[]) => void>();
+let noteCache: Note[] = [];
+let migrationPromise: Promise<void> | null = null;
+
+async function migrateLegacyData() {
+  if (migrationPromise) return migrationPromise;
+  migrationPromise = (async () => {
+    const [storedNotes, storedCategories] = await Promise.all([
+      getAll<StoredNote>(NOTES_STORE),
+      getAll<Category>(CATEGORIES_STORE),
+    ]);
+    if (!storedNotes.length) {
+      await Promise.all(readLegacy().map((note) => putValue(NOTES_STORE, note)));
+    }
+    if (!storedCategories.length) {
+      await Promise.all(legacyCategories().filter((category) => category.custom).map((category) => putValue(CATEGORIES_STORE, category)));
+    }
+  })();
+  try { await migrationPromise; } catch (error) { migrationPromise = null; throw error; }
+}
 
 async function loadCategories() {
-  const user = await currentUser();
-  const { data, error } = await supabase.from("categories").select("slug,label,hint").eq("user_id", user.id);
-  if (error) throw error;
-  const cloud = (data ?? []).map((c) => ({ id: `custom:${c.slug}`, label: c.label, hint: c.hint, custom: true }));
-  categoryCache = [...CATEGORIES, ...cloud];
+  await migrateLegacyData();
+  const custom = await getAll<Category>(CATEGORIES_STORE);
+  categoryCache = [...CATEGORIES, ...custom.filter((category) => category.custom)];
   catListeners.forEach((listener) => listener(categoryCache));
 }
 
-const catListeners = new Set<(c: Category[]) => void>();
-
 export function categoryLabel(id: CategoryId) {
-  return categoryCache.find((c) => c.id === id)?.label ?? id;
+  return categoryCache.find((category) => category.id === id)?.label ?? id;
 }
 
 export function useCategories() {
-  const [categories, setCategories] = useState<Category[]>(CATEGORIES);
+  const [categories, setCategories] = useState<Category[]>(categoryCache);
 
   useEffect(() => {
-    void loadCategories().catch(() => setCategories([...CATEGORIES, ...legacyCategories()]));
-    const l = (c: Category[]) => setCategories(c);
-    catListeners.add(l);
-    return () => {
-      catListeners.delete(l);
-    };
+    const listener = (next: Category[]) => setCategories(next);
+    catListeners.add(listener);
+    void loadCategories().catch(() => setCategories(CATEGORIES));
+    return () => { catListeners.delete(listener); };
   }, []);
 
   const addCategory = useCallback(async (label: string) => {
     const clean = label.trim();
     if (!clean) return;
     const slug = clean.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
-    if (!slug || categoryCache.some((c) => c.id === `custom:${slug}`)) return;
-    const user = await currentUser();
-    const { error } = await supabase.from("categories").insert({ user_id: user.id, slug, label: clean });
-    if (error) throw error;
+    const id = `custom:${slug}`;
+    if (!slug || categoryCache.some((category) => category.id === id)) return;
+    await putValue<Category>(CATEGORIES_STORE, { id, label: clean, hint: "Pasta personalizada", custom: true });
     await loadCategories();
   }, []);
 
   const removeCategory = useCallback(async (id: CategoryId) => {
     if (!id.startsWith("custom:")) return;
-    const user = await currentUser();
-    const { error } = await supabase.from("categories").delete().eq("user_id", user.id).eq("slug", id.slice(7));
-    if (error) throw error;
+    await deleteValue(CATEGORIES_STORE, id);
     await loadCategories();
   }, []);
 
   return { categories, addCategory, removeCategory };
 }
 
-/* ---------------- notas ---------------- */
-
-function readLegacy(): Note[] {
-  if (typeof window === "undefined") return [];
-  try {
-    const raw = window.localStorage.getItem(STORAGE_KEY);
-    return raw ? (JSON.parse(raw) as Note[]) : [];
-  } catch {
-    return [];
-  }
-}
-
-const listeners = new Set<(n: Note[]) => void>();
-let noteCache: Note[] = [];
-
-function emit(notes: Note[]) {
+function emitNotes(notes: Note[]) {
   noteCache = notes;
-  listeners.forEach((l) => l(notes));
+  noteListeners.forEach((listener) => listener(notes));
 }
 
 async function loadNotes() {
-  const user = await currentUser();
-  const { data, error } = await supabase.from("notes").select("*").eq("user_id", user.id).order("created_at", { ascending: false });
-  if (error) throw error;
-  const notes = await Promise.all((data ?? []).map(async (row): Promise<Note> => {
-    let dataUrl: string | undefined;
-    if (row.attachment_path && row.attachment_kind === "image") {
-      const { data: signed } = await supabase.storage.from("note-attachments").createSignedUrl(row.attachment_path, 3600);
-      dataUrl = signed?.signedUrl;
-    }
-    return {
-      id: row.id, title: row.title, text: row.text, category: row.category, tags: row.tags,
-      source: row.source, createdAt: new Date(row.created_at).getTime(),
-      ...(row.attachment_kind && row.attachment_name ? { attachment: {
-        kind: row.attachment_kind as Attachment["kind"], name: row.attachment_name,
-        mime: row.attachment_mime ?? "application/octet-stream", size: row.attachment_size ?? 0,
-        ...(dataUrl ? { dataUrl } : {}),
-      } } : {}),
-    };
-  }));
-  emit(notes);
+  await migrateLegacyData();
+  const stored = await getAll<StoredNote>(NOTES_STORE);
+  const notes = stored
+    .map(({ attachmentBlob: _attachmentBlob, ...note }) => note)
+    .sort((a, b) => b.createdAt - a.createdAt);
+  emitNotes(notes);
 }
 
 export function useNotes() {
-  const [notes, setNotes] = useState<Note[]>([]);
+  const [notes, setNotes] = useState<Note[]>(noteCache);
 
   useEffect(() => {
+    const listener = (next: Note[]) => setNotes(next);
+    noteListeners.add(listener);
     void loadNotes().catch(() => setNotes(readLegacy()));
-    const listener = (n: Note[]) => setNotes(n);
-    listeners.add(listener);
-    return () => {
-      listeners.delete(listener);
-    };
+    return () => { noteListeners.delete(listener); };
   }, []);
 
   const addNote = useCallback(async (note: Omit<Note, "id" | "createdAt">, file?: File) => {
-    const user = await currentUser();
-    const id = crypto.randomUUID();
-    let attachmentPath: string | null = null;
-    let uploadFile = file;
-    if (!uploadFile && note.attachment?.dataUrl) {
-      uploadFile = await fetch(note.attachment.dataUrl).then((response) => response.blob()).then((blob) => new File([blob], note.attachment?.name ?? "imagem.jpg", { type: blob.type }));
-    }
-    if (uploadFile) {
-      attachmentPath = `${user.id}/${id}/${uploadFile.name.replace(/[^a-zA-Z0-9._-]/g, "-")}`;
-      const { error: uploadError } = await supabase.storage.from("note-attachments").upload(attachmentPath, uploadFile);
-      if (uploadError) throw uploadError;
-    }
-    const { error } = await supabase.from("notes").insert({
-      id, user_id: user.id, title: note.title, text: note.text, category: note.category,
-      tags: note.tags, source: note.source, attachment_kind: note.attachment?.kind ?? null,
-      attachment_name: note.attachment?.name ?? null, attachment_mime: note.attachment?.mime ?? null,
-      attachment_size: note.attachment?.size ?? null, attachment_path: attachmentPath,
-    });
-    if (error) {
-      if (attachmentPath) await supabase.storage.from("note-attachments").remove([attachmentPath]);
-      throw error;
-    }
+    const stored: StoredNote = {
+      ...note,
+      id: crypto.randomUUID(),
+      createdAt: Date.now(),
+      ...(file ? { attachmentBlob: file } : {}),
+    };
+    await putValue<StoredNote>(NOTES_STORE, stored);
     await loadNotes();
   }, []);
 
   const removeNote = useCallback(async (id: string) => {
-    const user = await currentUser();
-    const { data } = await supabase.from("notes").select("attachment_path").eq("id", id).eq("user_id", user.id).maybeSingle();
-    const { error } = await supabase.from("notes").delete().eq("id", id).eq("user_id", user.id);
-    if (error) throw error;
-    if (data?.attachment_path) await supabase.storage.from("note-attachments").remove([data.attachment_path]);
-    emit(noteCache.filter((note) => note.id !== id));
+    await deleteValue(NOTES_STORE, id);
+    emitNotes(noteCache.filter((note) => note.id !== id));
   }, []);
 
   return { notes, addNote, removeNote };
