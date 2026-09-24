@@ -20,6 +20,19 @@ import {
 } from "@/lib/notes";
 import { cn } from "@/lib/utils";
 
+function sanitize(input: string): string {
+  return input.replace(/<[^>]*>?/g, "");
+}
+
+function isValidUrl(url: string): boolean {
+  try {
+    new URL(url);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 type MenuProps = {
   text: string;
   source: string;
@@ -46,19 +59,24 @@ function CaptureForm({ text, source, attachment, file, onSaved, close }: MenuPro
   const save = async (cat: CategoryId) => {
     setSaving(true);
     try {
+      const sanitizedTitle = sanitize(title.trim() || defaultTitle(text, attachment));
+      const sanitizedText = sanitize(text);
+      // Validate URLs in text
+      const urlRegex = /(https?:\/\/[^\s]+)/g;
+      const processedText = sanitizedText.replace(urlRegex, (match) => (isValidUrl(match) ? match : ""));
       await addNote({
-      title: title.trim() || defaultTitle(text, attachment),
-      text,
-      category: cat,
-      tags: tags
-        .split(",")
-        .map((t) => t.trim())
-        .filter(Boolean),
-      source,
-      ...(attachment ? { attachment } : {}),
+        title: sanitizedTitle,
+        text: processedText,
+        category: cat,
+        tags: tags
+          .split(",")
+          .map((t) => t.trim())
+          .filter(Boolean),
+        source,
+        ...(attachment ? { attachment } : {}),
       }, file);
       toast.success(`Nota salva na pasta ${categoryLabel(cat)}!`, {
-        description: title.trim() || defaultTitle(text, attachment),
+        description: sanitizedTitle,
       });
       onSaved();
       close();
@@ -77,7 +95,12 @@ function CaptureForm({ text, source, attachment, file, onSaved, close }: MenuPro
         <label className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-widest text-muted-foreground">
           <Sparkles className="size-3.5 text-marker" /> Título sugerido pela IA
         </label>
-        <Input value={title} onChange={(e) => setTitle(e.target.value)} className="h-12 text-base" />
+        <Input
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          className="h-12 text-base"
+          aria-label="Título"
+        />
       </div>
 
       {attachment?.kind === "image" && attachment.dataUrl && (
@@ -136,7 +159,12 @@ function CaptureForm({ text, source, attachment, file, onSaved, close }: MenuPro
             <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
               Tags (separadas por vírgula)
             </p>
-            <Input value={tags} onChange={(e) => setTags(e.target.value)} className="h-12 text-base" />
+            <Input
+              value={tags}
+              onChange={(e) => setTags(e.target.value)}
+              className="h-12 text-base"
+              aria-label="Tags"
+            />
           </div>
           <Button size="lg" className="h-12 w-full" disabled={saving} onClick={() => void save(category)}>
             {saving ? "Salvando…" : "Salvar na agenda"}
@@ -223,6 +251,9 @@ export function ParagraphCapture({
 
       <div
         onClick={() => setOpen(true)}
+        role="button"
+        tabIndex={0}
+        aria-label="Abrir captura"
         className={cn(
           "cursor-pointer rounded-xl px-3 py-2.5 transition-colors",
           "hover:bg-marker-soft",
