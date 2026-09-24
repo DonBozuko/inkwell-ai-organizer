@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { FEATURES, type Feature } from "@/lib/features";
 import { cn } from "@/lib/utils";
+import { memo } from "react";
 
 interface FeatureGridProps {
   variant?: "compact" | "expanded";
@@ -9,12 +10,7 @@ interface FeatureGridProps {
   className?: string;
 }
 
-export function FeatureGrid({
-  variant = "compact",
-  features = FEATURES,
-  onSelect,
-  className,
-}: FeatureGridProps) {
+export const FeatureGrid: React.FC<FeatureGridProps> = memo(({ variant = "compact", features = FEATURES, onSelect, className, }: FeatureGridProps) => {
   const getTitleClass = (title: string) =>
     title === "Agenda Inteligente" ? "text-primary" : "";
 
@@ -30,6 +26,7 @@ export function FeatureGrid({
           <button
             key={feature.id}
             type="button"
+            aria-label={\`${feature.title}: ${feature.shortDescription}\`}
             onClick={() => onSelect(feature)}
             className="flex min-h-20 flex-col items-start gap-1.5 rounded-2xl border border-border bg-card p-3 text-left transition-all hover:-translate-y-0.5 hover:border-marker hover:bg-accent active:translate-y-0"
           >
@@ -77,6 +74,7 @@ export function FeatureGrid({
           <Button
             size="lg"
             className="mt-4 h-11 w-full gap-2"
+            aria-label={\`${feature.title}: ${feature.shortDescription}\`}
             onClick={() => onSelect(feature)}
           >
             <feature.icon className="size-4" />
