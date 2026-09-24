@@ -120,7 +120,9 @@ function CategoryList() {
 }
 
 export function AppShell({ children }: { children: ReactNode }) {
-  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const pathname = useRouterState({
+    select: (s: any) => s.location.pathname
+  });
 
   return (
     <div className="min-h-screen text-foreground">
