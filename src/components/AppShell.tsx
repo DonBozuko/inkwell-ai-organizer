@@ -126,7 +126,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         <div className="mx-auto grid max-w-6xl grid-cols-[minmax(0,1fr)_auto] items-center gap-4 px-4 py-3 sm:px-6">
           <Link to="/" className="flex min-w-0 items-center gap-2.5">
             <span className="min-w-0">
-              <span className="block truncate text-sm font-extrabold tracking-tight">Agenda Inteligente</span>
+              <span className="block truncate text-sm font-extrabold tracking-tight">Agenda</span>
               <span className="block truncate text-xs text-muted-foreground">por captura</span>
             </span>
           </Link>
