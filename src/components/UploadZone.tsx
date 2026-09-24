@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button";
 import { extractFile, type ExtractedFile } from "@/lib/files";
 import { cn } from "@/lib/utils";
 
+export const ACCEPTED_FILE_TYPES = ".pdf,.txt,.md,.csv,.json,.html,.xml,.yml,.yaml,image/*";
+
 export type FeedItem = { text: string; attachment?: ExtractedFile["attachment"]; file?: File };
 
 export function UploadZone({
@@ -79,17 +81,19 @@ export function UploadZone({
     <div
       onDragOver={(e) => {
         e.preventDefault();
+        e.stopPropagation();
         setOver(true);
       }}
       onDragLeave={() => setOver(false)}
       onDrop={onDrop}
+      aria-describedby="uploadzone-desc"
       className={cn(
         "rounded-2xl border-2 border-dashed p-5 text-center transition-colors",
         over ? "border-marker bg-marker-soft" : "border-border",
       )}
     >
       <p className="text-sm font-medium">Arraste arquivos aqui</p>
-      <p className="mt-1 text-xs text-muted-foreground">
+      <p id="uploadzone-desc" className="mt-1 text-xs text-muted-foreground">
         PDF, imagens (JPG/PNG), TXT, MD, CSV, JSON, HTML — ou uma pasta inteira.
       </p>
 
@@ -112,7 +116,7 @@ export function UploadZone({
         ref={fileInput}
         type="file"
         multiple
-        accept=".pdf,.txt,.md,.csv,.json,.html,.xml,.yml,.yaml,image/*"
+        accept={ACCEPTED_FILE_TYPES}
         className="hidden"
         onChange={onChange}
       />
