@@ -1,4 +1,5 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate }
+export default CapturePage; from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { ClipboardPaste, Link2, Loader2, Sparkles } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
