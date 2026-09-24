@@ -169,7 +169,7 @@ function CapturePage() {
     <AppShell>
       <div className="space-y-6">
         <section className="surface rise-in p-5 sm:p-6">
-          <h1 className="text-2xl font-extrabold tracking-tight sm:text-3xl">Feed Inteligente</h1>
+          <h1 className="text-2xl font-extrabold tracking-tight sm:text-3xl text-blue-500">Feed Inteligente</h1>
           <p className="mt-1.5 text-sm text-muted-foreground">
             Cole um link, um texto copiado — ou envie PDFs, imagens e pastas inteiras.
           </p>
