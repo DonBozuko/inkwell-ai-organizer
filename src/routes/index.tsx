@@ -108,8 +108,7 @@ function CapturePage() {
     const feature = featureById(action);
     void navigate({ to: "/", search: {}, replace: true });
     if (feature) runFeature(feature);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [action]);
+  }, [action, navigate]);
 
   const process = async () => {
     const value = raw.trim();
