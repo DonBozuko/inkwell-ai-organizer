@@ -23,6 +23,18 @@ export function UploadZone({
   const imageInput = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
   const [over, setOver] = useState(false);
+  const supportsDnD = typeof window !== "undefined" && "draggable" in document.createElement("div");
+  const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5 MB
+
+  const isAcceptedFile = (file: File) => {
+    const lowerName = file.name.toLowerCase();
+    const patterns = ACCEPTED_FILE_TYPES.split(",").map((p) => p.trim());
+    return patterns.some((pattern) => {
+      if (pattern === "image/*") return file.type.startsWith("image/");
+      const ext = pattern.replace(".", "");
+      return lowerName.endsWith(`.${ext}`);
+    });
+  };
 
   useEffect(() => {
     if (!openRef) return;
@@ -32,6 +44,18 @@ export function UploadZone({
     };
   }, [openRef]);
 
+  const dragProps = supportsDnD
+    ? {
+        onDragOver: (e: DragEvent<HTMLDivElement>) => {
+          e.preventDefault();
+          e.stopPropagation();
+          setOver(true);
+        },
+        onDragLeave: () => setOver(false),
+        onDrop,
+      }
+    : {};
+
   const handleFiles = async (list: FileList | null) => {
     const files = Array.from(list ?? []);
     if (!files.length) return;
@@ -40,6 +64,14 @@ export function UploadZone({
     const failures: string[] = [];
 
     for (const file of files.slice(0, 25)) {
+      if (!isAcceptedFile(file)) {
+        failures.push(`Tipo de arquivo não suportado: ${file.name}`);
+        continue;
+      }
+      if (file.size > MAX_FILE_SIZE) {
+        failures.push(`Arquivo muito grande (máx 5 MB): ${file.name}`);
+        continue;
+      }
       try {
         const result = await extractFile(file);
         if (result.attachment?.kind === "image") {
@@ -79,14 +111,10 @@ export function UploadZone({
 
   return (
     <div
-      onDragOver={(e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        setOver(true);
-      }}
-      onDragLeave={() => setOver(false)}
-      onDrop={onDrop}
+      {...dragProps}
       aria-describedby="uploadzone-desc"
+      role="region"
+      aria-label="Área de upload de arquivos"
       className={cn(
         "rounded-2xl border-2 border-dashed p-5 text-center transition-colors",
         over ? "border-marker bg-marker-soft" : "border-border",
@@ -96,6 +124,12 @@ export function UploadZone({
       <p id="uploadzone-desc" className="mt-1 text-xs text-muted-foreground">
         PDF, imagens (JPG/PNG), TXT, MD, CSV, JSON, HTML — ou uma pasta inteira.
       </p>
+
+      {!supportsDnD && (
+        <p className="mt-2 text-sm text-red-500">
+          Seu navegador não suporta arrastar e soltar arquivos. Use os botões acima.
+        </p>
+      )}
 
       <div className="mt-4 grid gap-2 sm:grid-cols-3">
         <Button variant="outline" size="lg" className="h-12 gap-2" disabled={busy} onClick={() => fileInput.current?.click()}>
