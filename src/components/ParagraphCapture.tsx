@@ -1,4 +1,4 @@
-import { Check, FileText, Sparkles, SlidersHorizontal, Wand2 } from "lucide-react";
+import { Check, FileText, Sparkles, SlidersHorizontal, Wand2, Loader2 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -59,7 +59,17 @@ function CaptureForm({ text, source, attachment, file, onSaved, close }: MenuPro
   const save = async (cat: CategoryId) => {
     setSaving(true);
     try {
-      const sanitizedTitle = sanitize(title.trim() || defaultTitle(text, attachment));
+      const trimmedTitle = sanitize(title.trim() || defaultTitle(text, attachment));
+      if (trimmedTitle.length < 3 || trimmedTitle.length > 100) {
+      throw new Error("O título deve ter entre 3 e 100 caracteres.");
+      }
+      const tagsArray = tags
+      .split(",")
+      .map((t) => t.trim())
+      .filter(Boolean);
+      if (tagsArray.length > 10) {
+      throw new Error("Máximo de 10 tags permitidos.");
+      }
       const sanitizedText = sanitize(text);
       // Validate URLs in text
       const urlRegex = /(https?:\/\/[^\s]+)/g;
@@ -68,10 +78,7 @@ function CaptureForm({ text, source, attachment, file, onSaved, close }: MenuPro
         title: sanitizedTitle,
         text: processedText,
         category: cat,
-        tags: tags
-          .split(",")
-          .map((t) => t.trim())
-          .filter(Boolean),
+        tags: tagsArray,
         source,
         ...(attachment ? { attachment } : {}),
       }, file);
@@ -81,8 +88,8 @@ function CaptureForm({ text, source, attachment, file, onSaved, close }: MenuPro
       onSaved();
       close();
     } catch (error) {
-      toast.error("A nota não foi salva.", {
-        description: error instanceof Error ? error.message : "Verifique o espaço disponível no dispositivo.",
+      toast.error("Não foi possível salvar a nota.", {
+      description: error instanceof Error ? error.message : "Verifique o espaço disponível no dispositivo ou tente novamente mais tarde.",
       });
     } finally {
       setSaving(false);
@@ -96,10 +103,11 @@ function CaptureForm({ text, source, attachment, file, onSaved, close }: MenuPro
           <Sparkles className="size-3.5 text-marker" /> Título sugerido pela IA
         </label>
         <Input
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          className="h-12 text-base"
-          aria-label="Título"
+        value={title}
+        onChange={(e) => setTitle(e.target.value)}
+        className="h-12 text-base"
+        placeholder="Título da nota"
+        aria-label="Título"
         />
       </div>
 
@@ -160,14 +168,22 @@ function CaptureForm({ text, source, attachment, file, onSaved, close }: MenuPro
               Tags (separadas por vírgula)
             </p>
             <Input
-              value={tags}
-              onChange={(e) => setTags(e.target.value)}
-              className="h-12 text-base"
-              aria-label="Tags"
+            value={tags}
+            onChange={(e) => setTags(e.target.value)}
+            className="h-12 text-base"
+            placeholder="Ex.: tecnologia, saúde"
+            aria-label="Tags"
             />
           </div>
           <Button size="lg" className="h-12 w-full" disabled={saving} onClick={() => void save(category)}>
-            {saving ? "Salvando…" : "Salvar na agenda"}
+          {saving ? (
+          <>
+          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+          Salvando…
+          </>
+          ) : (
+          "Salvar na agenda"
+          )}
           </Button>
         </div>
       )}
