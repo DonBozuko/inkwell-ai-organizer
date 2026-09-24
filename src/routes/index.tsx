@@ -178,7 +178,7 @@ function CapturePage() {
             <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-muted-foreground">
               Melhores funções
             </p>
-            <FeatureGrid variant="compact" onSelect={runFeature} />
+            <FeatureGrid onSelect={runFeature} />
           </div>
 
           <Textarea
