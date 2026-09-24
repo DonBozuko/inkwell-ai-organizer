@@ -23,7 +23,8 @@ export function FeatureGrid({
             onClick={() => onSelect(feature)}
             className="flex min-h-20 flex-col items-start gap-1.5 rounded-2xl border border-border bg-card p-3 text-left transition-all hover:-translate-y-0.5 hover:border-marker hover:bg-accent active:translate-y-0"
           >
-            <feature.icon className="size-5 shrink-0 text-marker" />
+            {/* Alterado de text-marker (azul) para text-foreground (cor padrão) */}
+            <feature.icon className="size-5 shrink-0 text-foreground" />
             <span className="text-sm font-semibold leading-tight">{feature.title}</span>
             <span className="truncate text-xs text-muted-foreground">{feature.shortDescription}</span>
           </button>
@@ -36,7 +37,8 @@ export function FeatureGrid({
     <div className={cn("grid gap-4 sm:grid-cols-2 xl:grid-cols-3", className)}>
       {features.map((feature) => (
         <article key={feature.id} className="surface flex flex-col p-5 transition-shadow hover:shadow-float">
-          <span className="grid size-11 place-items-center rounded-2xl bg-marker-soft text-marker">
+          {/* Alterado de bg-marker-soft (azul) para bg-muted (cor neutra) */}
+          <span className="grid size-11 place-items-center rounded-2xl bg-muted text-foreground">
             <feature.icon className="size-5" />
           </span>
           <h2 className="mt-3 text-base font-bold tracking-tight">{feature.title}</h2>
