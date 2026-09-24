@@ -1,5 +1,16 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Clock, Download, FileText, Inbox, Link2, ListTodo, Paperclip, Share2, Sparkles, Trash2 } from "lucide-react";
+import {
+  Clock,
+  Download,
+  FileText,
+  Inbox,
+  Link2,
+  ListTodo,
+  Paperclip,
+  Share2,
+  Sparkles,
+  Trash2,
+} from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -29,7 +40,8 @@ export const Route = createFileRoute("/agenda")({
       { title: "Dashboard da Agenda — Notas capturadas" },
       {
         name: "description",
-        content: "Todas as suas notas capturadas, organizadas em pastas inteligentes, com download e compartilhamento.",
+        content:
+          "Todas as suas notas capturadas, organizadas em pastas inteligentes, com download e compartilhamento.",
       },
       { property: "og:title", content: "Dashboard da Agenda — Notas capturadas" },
       {
@@ -42,14 +54,22 @@ export const Route = createFileRoute("/agenda")({
 });
 
 function download(note: Note) {
-  const blob = new Blob([noteToMarkdown(note)], { type: "text/markdown;charset=utf-8" });
+  const blob = new Blob([noteToMarkdown(note)], {
+    type: "text/markdown;charset=utf-8",
+  });
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
-  a.download = `${note.title.replace(/[^\p{L}\p{N} -]/gu, "").slice(0, 48).trim() || "nota"}.md`;
+  a.download = `${note.title
+    .replace(/[^\p{L}\p{N} -]/gu, "")
+    .slice(0, 48)
+    .trim() || "nota"
+    }.md`;
   a.click();
   URL.revokeObjectURL(url);
-  toast.success("Download iniciado!", { description: "Arquivo .md salvo no dispositivo." });
+  toast.success("Download iniciado!", {
+    description: "Arquivo .md salvo no dispositivo.",
+  });
 }
 
 async function share(note: Note) {
@@ -59,29 +79,41 @@ async function share(note: Note) {
       await navigator.share({ title: note.title, text });
       return;
     } catch {
-      /* usuário cancelou — cai para o clipboard */
+      // usuário cancelou — cai para o clipboard
     }
   }
   try {
     await navigator.clipboard.writeText(text);
-    toast.success("Texto formatado copiado!", { description: "Cole onde quiser." });
+    toast.success("Texto formatado copiado!", {
+      description: "Cole onde quiser.",
+    });
   } catch {
     toast.error("Não foi possível compartilhar.");
   }
 }
 
-function NoteCard({ note, onRemove }: { note: Note; onRemove: () => void }) {
+function NoteCard({
+  note,
+  onRemove,
+}: {
+  note: Note;
+  onRemove: () => void;
+}) {
   return (
     <article className="surface rise-in p-4 sm:p-5">
       <header className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3">
         <div className="min-w-0">
-          <h3 className="text-base font-bold leading-snug tracking-tight sm:text-lg">{note.title}</h3>
+          <h3 className="text-base font-bold leading-snug tracking-tight sm:text-lg">
+            {note.title}
+          </h3>
           <p className="mt-1 flex items-center gap-1.5 text-xs text-muted-foreground">
             <Clock className="size-3.5 shrink-0" />
             {formatDate(note.createdAt)}
           </p>
         </div>
-        <Badge className="shrink-0 border-0 bg-marker-soft text-marker">{categoryLabel(note.category)}</Badge>
+        <Badge className="shrink-0 border-0 bg-marker-soft text-marker">
+          {categoryLabel(note.category)}
+        </Badge>
       </header>
 
       {note.attachment?.kind === "image" && note.attachment.dataUrl && (
@@ -93,7 +125,9 @@ function NoteCard({ note, onRemove }: { note: Note; onRemove: () => void }) {
       )}
 
       {note.text && (
-        <p className="mt-3 whitespace-pre-line text-sm leading-relaxed text-muted-foreground">{note.text}</p>
+        <p className="mt-3 whitespace-pre-line text-sm leading-relaxed text-muted-foreground">
+          {note.text}
+        </p>
       )}
 
       {note.attachment?.kind === "file" && (
@@ -108,7 +142,10 @@ function NoteCard({ note, onRemove }: { note: Note; onRemove: () => void }) {
       {note.tags.length > 0 && (
         <div className="mt-3 flex flex-wrap gap-1.5">
           {note.tags.map((t) => (
-            <span key={t} className="rounded-full bg-muted px-2.5 py-1 text-xs text-muted-foreground">
+            <span
+              key={t}
+              className="rounded-full bg-muted px-2.5 py-1 text-xs text-muted-foreground"
+            >
               #{t}
             </span>
           ))}
@@ -121,7 +158,12 @@ function NoteCard({ note, onRemove }: { note: Note; onRemove: () => void }) {
       </p>
 
       <footer className="mt-4 flex flex-wrap gap-2 border-t border-border pt-4">
-        <Button variant="outline" size="lg" className="h-11 flex-1 gap-2" onClick={() => download(note)}>
+        <Button
+          variant="outline"
+          size="lg"
+          className="h-11 flex-1 gap-2"
+          onClick={() => download(note)}
+        >
           <Download className="size-4" />
           Download
         </Button>
@@ -157,9 +199,16 @@ function AgendaPage() {
   const { categories } = useCategories();
   const [quick, setQuick] = useState<QuickId[]>([]);
 
+  // Combine a fake "todas" category with the real ones, casting to satisfy TypeScript.
+  const allCategories = [
+    { id: "todas" as const, label: "Todas" },
+    ...categories,
+  ] as const;
+
   const byCat = cat !== "todas" ? notes.filter((n) => n.category === cat) : notes;
   const filtered = byCat.filter((n) => {
-    if (quick.includes("hoje") && Date.now() - n.createdAt > 24 * 60 * 60 * 1000) return false;
+    if (quick.includes("hoje") && Date.now() - n.createdAt > 24 * 60 * 60 * 1000)
+      return false;
     if (quick.includes("anexo") && !n.attachment) return false;
     if (quick.includes("tarefas") && n.category !== "tarefas") return false;
     return true;
@@ -172,14 +221,17 @@ function AgendaPage() {
     <AppShell>
       <div className="space-y-5">
         <div>
-          <h1 className="text-2xl font-extrabold tracking-tight sm:text-3xl">Dashboard da Agenda</h1>
+          <h1 className="text-2xl font-extrabold tracking-tight sm:text-3xl">
+            Dashboard da Agenda
+          </h1>
           <p className="mt-1.5 text-sm text-muted-foreground">
-            {notes.length} {notes.length === 1 ? "nota capturada" : "notas capturadas"}
+            {notes.length}{" "}
+            {notes.length === 1 ? "nota capturada" : "notas capturadas"}
           </p>
         </div>
 
         <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:px-0">
-          {[{ id: "todas", label: "Todas" }, ...categories].map((c) => (
+          {allCategories.map((c) => (
             <Link
               key={c.id}
               to="/agenda"
@@ -237,7 +289,15 @@ function AgendaPage() {
         ) : (
           <div className="grid gap-4 xl:grid-cols-2">
             {filtered.map((n) => (
-              <NoteCard key={n.id} note={n} onRemove={() => void removeNote(n.id).catch(() => toast.error("Não foi possível excluir a nota."))} />
+              <NoteCard
+                key={n.id}
+                note={n}
+                onRemove={() =>
+                  void removeNote(n.id).catch(() =>
+                    toast.error("Não foi possível excluir a nota."),
+                  )
+                }
+              />
             ))}
           </div>
         )}
