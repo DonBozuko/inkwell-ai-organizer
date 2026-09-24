@@ -1,14 +1,9 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { toast } from "sonner";
 
 import { AppShell } from "@/components/AppShell";
 import { FeatureGrid } from "@/components/FeatureGrid";
-import {
-  CAPTURE_ACTIONS,
-  exportNotesMarkdown,
-  toggleTheme,
-  type Feature,
-} from "@/lib/features";
+import { CAPTURE_ACTIONS, type Feature } from "@/lib/features";
+import { handleSharedFeature } from "@/lib/feature-actions";
 import { useNotes } from "@/lib/notes";
 
 export const Route = createFileRoute("/funcoes")({
@@ -42,31 +37,9 @@ function FuncoesPage() {
       return;
     }
 
-    switch (feature.action) {
-      case "open-agenda":
-        void navigate({ to: "/agenda", search: { cat: "todas" } });
-        return;
-      case "new-folder":
-        void navigate({ to: "/agenda", search: { cat: "todas" } });
-        toast.info("Crie a pasta na lista de categorias.", {
-          description: "Use “Nova pasta” na barra lateral (ou no menu de categorias).",
-        });
-        return;
-      case "export-md":
-        if (!exportNotesMarkdown(notes)) {
-          toast.info("Nenhuma nota para exportar ainda.");
-          return;
-        }
-        toast.success("Exportação iniciada!", { description: "Arquivo .md salvo no dispositivo." });
-        return;
-      case "toggle-theme": {
-        const dark = toggleTheme();
-        toast.success(dark ? "Modo escuro ativado." : "Modo claro ativado.");
-        return;
-      }
-      default:
-        toast.info("Função em breve.");
-    }
+    handleSharedFeature(feature, notes, () => {
+      void navigate({ to: "/agenda", search: { cat: "todas" } });
+    });
   };
 
   return (

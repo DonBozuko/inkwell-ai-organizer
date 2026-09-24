@@ -11,13 +11,8 @@ import { UploadZone, type FeedItem } from "@/components/UploadZone";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { readUrl } from "@/lib/reader.functions";
-import {
-  SAMPLE_TEXT,
-  exportNotesMarkdown,
-  featureById,
-  toggleTheme,
-  type Feature,
-} from "@/lib/features";
+import { SAMPLE_TEXT, featureById, type Feature } from "@/lib/features";
+import { handleSharedFeature } from "@/lib/feature-actions";
 import { isUrl, normalizeUrl, toParagraphs, useNotes } from "@/lib/notes";
 
 type Search = { action?: string };
@@ -101,29 +96,10 @@ function CapturePage() {
         setText(SAMPLE, "Exemplo");
         setTimeout(focusField, 0);
         return;
-      case "open-agenda":
-        void navigate({ to: "/agenda", search: { cat: "todas" } });
-        return;
-      case "new-folder":
-        void navigate({ to: "/agenda", search: { cat: "todas" } });
-        toast.info("Crie a pasta na lista de categorias.", {
-          description: "Use “Nova pasta” na barra lateral (ou no menu de categorias).",
-        });
-        return;
-      case "export-md":
-        if (!exportNotesMarkdown(notes)) {
-          toast.info("Nenhuma nota para exportar ainda.");
-          return;
-        }
-        toast.success("Exportação iniciada!", { description: "Arquivo .md salvo no dispositivo." });
-        return;
-      case "toggle-theme": {
-        const dark = toggleTheme();
-        toast.success(dark ? "Modo escuro ativado." : "Modo claro ativado.");
-        return;
-      }
       default:
-        toast.info("Função em breve.");
+        handleSharedFeature(feature, notes, () => {
+          void navigate({ to: "/agenda", search: { cat: "todas" } });
+        });
     }
   };
 
