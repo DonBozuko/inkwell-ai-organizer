@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { THEME_EVENT, isDarkTheme, applyTheme } from "@/lib/features";
 import { useCategories, useNotes } from "@/lib/notes";
 import { cn } from "@/lib/utils";
+import { ErrorBoundary } from "react-error-boundary";
 
 const NAV = [
   { to: "/", label: "Captura", icon: Inbox },
@@ -158,7 +159,17 @@ export function AppShell({ children }: { children: ReactNode }) {
             <CategoryList />
           </div>
         </aside>
-        <main className="min-w-0 flex-1">{children}</main>
+        <main className="min-w-0 flex-1" aria-label="Conteúdo principal">
+          <ErrorBoundary
+            fallback={
+              <div className="p-4 text-center text-red-600">
+                Ocorreu um erro inesperado. Por favor, recarregue a página.
+              </div>
+            }
+          >
+            {children}
+          </ErrorBoundary>
+        </main>
       </div>
 
       <nav className="fixed inset-x-0 bottom-0 z-30 border-t border-border backdrop-blur-xl lg:hidden">
