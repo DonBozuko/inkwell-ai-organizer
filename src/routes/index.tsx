@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { ClipboardPaste, Link2, Loader2, Sparkles } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 
 import { AppShell } from "@/components/AppShell";
@@ -42,28 +42,34 @@ export const Route = createFileRoute("/")({
 
 const SAMPLE = SAMPLE_TEXT;
 
-function CapturePage() {
+function CapturePage(): JSX.Element {
   const { action } = Route.useSearch();
   const navigate = useNavigate();
   const { notes } = useNotes();
-  const [raw, setRaw] = useState("");
-  const [loading, setLoading] = useState(false);
+
+  const [raw, setRaw] = useState<string>("");
+  const [loading, setLoading] = useState<boolean>(false);
   const [content, setContent] = useState<{ items: FeedItem[]; source: string } | null>(null);
+
   const fetchUrl = useServerFn(readUrl);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const openUpload = useRef<(() => void) | null>(null);
 
-  const setText = (text: string, source: string) =>
-    setContent({ items: toParagraphs(text).map((t) => ({ text: t })), source });
+  const setText = useCallback((text: string, source: string) => {
+    setContent({
+      items: toParagraphs(text).map((t) => ({ text: t })),
+      source,
+    });
+  }, []);
 
-  const focusField = () => {
+  const focusField = useCallback(() => {
     const field = textareaRef.current;
     if (!field) return;
     field.focus();
     field.setSelectionRange(field.value.length, field.value.length);
-  };
+  }, []);
 
-  const pasteFromClipboard = async () => {
+  const pasteFromClipboard = useCallback(async () => {
     try {
       const text = await navigator.clipboard.readText();
       if (!text.trim()) throw new Error("empty");
@@ -76,41 +82,45 @@ function CapturePage() {
         description: "No celular, toque e segure dentro do campo e escolha Colar. No PC, use Ctrl+V.",
       });
     }
-  };
+  }, [focusField]);
 
-  const runFeature = (feature: Feature) => {
-    switch (feature.action) {
-      case "prefill":
-        setRaw(feature.template ?? "");
-        setTimeout(focusField, 0);
-        toast.success(`${feature.title}: escreva e toque em Processar conteúdo.`);
-        return;
-      case "clipboard":
-        void pasteFromClipboard();
-        return;
-      case "upload":
-        openUpload.current?.();
-        return;
-      case "sample":
-        setRaw(SAMPLE);
-        setText(SAMPLE, "Exemplo");
-        setTimeout(focusField, 0);
-        return;
-      default:
-        handleSharedFeature(feature, notes, () => {
-          void navigate({ to: "/agenda", search: { cat: "todas" } });
-        });
-    }
-  };
+  const runFeature = useCallback(
+    (feature: Feature) => {
+      switch (feature.action) {
+        case "prefill":
+          setRaw(feature.template ?? "");
+          setTimeout(focusField, 0);
+          toast.success(`${feature.title}: escreva e toque em Processar conteúdo.`);
+          return;
+        case "clipboard":
+          void pasteFromClipboard();
+          return;
+        case "upload":
+          openUpload.current?.();
+          return;
+        case "sample":
+          setRaw(SAMPLE);
+          setText(SAMPLE, "Exemplo");
+          setTimeout(focusField, 0);
+          return;
+        default:
+          handleSharedFeature(feature, notes, () => {
+            void navigate({ to: "/agenda", search: { cat: "todas" } });
+          });
+      }
+    },
+    [focusField, pasteFromClipboard, setText, notes, navigate],
+  );
 
   useEffect(() => {
     if (!action) return;
     const feature = featureById(action);
     void navigate({ to: "/", search: {}, replace: true });
     if (feature) runFeature(feature);
-  }, [action, navigate]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [action, navigate, runFeature]);
 
-  const process = async () => {
+  const process = useCallback(async () => {
     const value = raw.trim();
     if (!value) {
       toast.error("Cole um link ou um bloco de texto primeiro.");
@@ -122,13 +132,19 @@ function CapturePage() {
       setLoading(true);
       try {
         const { text } = await fetchUrl({ data: { url } });
-        const paragraphs = toParagraphs(text).filter((p) => p.length > 40).slice(0, 60);
+        const paragraphs = toParagraphs(text)
+          .filter((p) => p.length > 40)
+          .slice(0, 60);
         if (!paragraphs.length) throw new Error("empty");
-        setContent({ items: paragraphs.map((t) => ({ text: t })), source: url });
+        setContent({
+          items: paragraphs.map((t) => ({ text: t })),
+          source: url,
+        });
         toast.success("Link lido e formatado!");
-      } catch {
+      } catch (err) {
         toast.error("Não consegui ler esse link.", {
-          description: "Alguns sites bloqueiam leitura. Cole o texto manualmente ou envie o PDF.",
+          description:
+            "Alguns sites bloqueiam leitura. Cole o texto manualmente ou envie o PDF.",
         });
       } finally {
         setLoading(false);
@@ -138,13 +154,15 @@ function CapturePage() {
 
     setText(value, "Texto colado");
     toast.success("Texto formatado. Toque no marcador azul para capturar.");
-  };
+  }, [raw, fetchUrl, setText]);
 
   return (
     <AppShell>
       <div className="space-y-6">
         <section className="surface rise-in p-5 sm:p-6">
-          <h1 className="text-2xl font-extrabold tracking-tight sm:text-3xl text-preco">Feed Inteligente</h1>
+          <h1 className="text-2xl font-extrabold tracking-tight sm:text-3xl text-preco">
+            Feed Inteligente
+          </h1>
           <p className="mt-1.5 text-sm text-muted-foreground">
             Cole um link, um texto copiado — ou envie PDFs, imagens e pastas inteiras.
           </p>
@@ -166,10 +184,19 @@ function CapturePage() {
 
           <div className="mt-4 flex flex-col gap-2 sm:flex-row">
             <Button size="lg" className="h-12 flex-1 gap-2" onClick={process} disabled={loading}>
-              {loading ? <Loader2 className="size-4 animate-spin" /> : <Sparkles className="size-4" />}
+              {loading ? (
+                <Loader2 className="size-4 animate-spin" />
+              ) : (
+                <Sparkles className="size-4" />
+              )}
               Processar conteúdo
             </Button>
-            <Button size="lg" variant="outline" className="h-12 gap-2" onClick={() => void pasteFromClipboard()}>
+            <Button
+              size="lg"
+              variant="outline"
+              className="h-12 gap-2"
+              onClick={() => void pasteFromClipboard()}
+            >
               <ClipboardPaste className="size-4" />
               Colar
             </Button>
