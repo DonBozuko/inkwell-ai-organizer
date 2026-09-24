@@ -1,5 +1,5 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { Inbox, LayoutList, Moon, Plus, Sun, Sparkles, Wand2, X } from "lucide-react";
+import { Inbox, LayoutList, Moon, Plus, Sun, Wand2, X } from "lucide-react";
 import { useEffect, useState, type ReactNode } from "react";
 import { toast } from "sonner";
 
