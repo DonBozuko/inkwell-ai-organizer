@@ -16,7 +16,7 @@ export function FeatureGrid({
   className,
 }: FeatureGridProps) {
   const getTitleClass = (title: string) =>
-    title === "Feed Inteligente" ? "text-primary" : "";
+    title === "Agenda Inteligente" ? "text-primary" : "";
 
   if (variant === "compact") {
     return (
