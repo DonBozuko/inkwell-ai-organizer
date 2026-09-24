@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { THEME_EVENT, isDarkTheme, applyTheme } from "@/lib/features";
 import { useCategories, useNotes } from "@/lib/notes";
 import { cn } from "@/lib/utils";
+import { Helmet } from "react-helmet-async";
 import { ErrorBoundary } from "react-error-boundary";
 
 const NAV = [
@@ -123,7 +124,12 @@ export function AppShell({ children }: { children: ReactNode }) {
 
   return (
     <div className="min-h-screen text-foreground">
-      <header className="sticky top-0 z-30 border-b border-border/70 backdrop-blur-xl">
+    <Helmet>
+      <title>Agenda - Por captura</title>
+      <meta name="description" content="Gerencie suas notas e agenda de forma eficiente." />
+      <meta property="og:image" content="/og-image.png" />
+    </Helmet>
+    <header className="fixed top-0 left-0 right-0 z-30 w-full border-b border-border/70 backdrop-blur-xl">
         <div className="mx-auto grid max-w-6xl grid-cols-[minmax(0,1fr)_auto] items-center gap-4 px-4 py-3 sm:px-6">
           <Link to="/" className="flex min-w-0 items-center gap-2.5">
             <span className="min-w-0">
@@ -153,7 +159,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         </div>
       </header>
 
-      <div className="mx-auto flex max-w-6xl gap-8 px-4 pb-28 pt-6 sm:px-6 lg:pb-12">
+      <div className="mx-auto flex flex-col lg:flex-row max-w-6xl gap-8 px-4 pb-28 pt-6 sm:px-6 lg:pb-12">
         <aside className="hidden w-60 shrink-0 lg:block">
           <div className="sticky top-24">
             <CategoryList />
