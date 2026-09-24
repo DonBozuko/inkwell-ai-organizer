@@ -42,6 +42,11 @@ function CategoryList() {
   const { categories, addCategory, removeCategory } = useCategories();
   const [adding, setAdding] = useState(false);
   const [label, setLabel] = useState("");
+  const noteCounts = new Map<string, number>();
+
+  for (const note of notes) {
+    noteCounts.set(note.category, (noteCounts.get(note.category) ?? 0) + 1);
+  }
 
   return (
     <div className="space-y-1">
@@ -59,16 +64,16 @@ function CategoryList() {
               <span className="size-2 shrink-0 rounded-full bg-marker" />
               <span className="truncate">{c.label}</span>
             </span>
-            <span className="shrink-0 text-xs tabular-nums">
-              {notes.filter((n) => n.category === c.id).length}
-            </span>
+            <span className="shrink-0 text-xs tabular-nums">{noteCounts.get(c.id) ?? 0}</span>
           </Link>
           {c.custom && (
             <button
               type="button"
               aria-label={`Remover pasta ${c.label}`}
-              onClick={() => void removeCategory(c.id).catch(() => toast.error("Não foi possível remover a pasta."))}
-              className="ml-1 shrink-0 rounded-lg p-1.5 text-muted-foreground opacity-0 transition-opacity hover:text-foreground group-hover/cat:opacity-100"
+              onClick={() =>
+                void removeCategory(c.id).catch(() => toast.error("Não foi possível remover a pasta."))
+              }
+              className="ml-1 shrink-0 rounded-lg p-1.5 text-muted-foreground opacity-0 transition-opacity hover:text-foreground focus-visible:opacity-100 group-hover/cat:opacity-100"
             >
               <X className="size-3.5" />
             </button>
@@ -96,7 +101,7 @@ function CategoryList() {
             onChange={(e) => setLabel(e.target.value)}
             onBlur={() => setAdding(false)}
             placeholder="Nome da pasta"
-                          className="w-full rounded-xl border border-border px-3 py-2 text-sm outline-none focus:border-marker"
+            className="w-full rounded-xl border border-border px-3 py-2 text-sm outline-none focus:border-marker"
           />
         </form>
       ) : (
@@ -116,8 +121,8 @@ export function AppShell({ children }: { children: ReactNode }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
 
   return (
-          <div className="min-h-screen text-foreground">
-              <header className="sticky top-0 z-30 border-b border-border/70 backdrop-blur-xl">
+    <div className="min-h-screen text-foreground">
+      <header className="sticky top-0 z-30 border-b border-border/70 backdrop-blur-xl">
         <div className="mx-auto grid max-w-6xl grid-cols-[minmax(0,1fr)_auto] items-center gap-4 px-4 py-3 sm:px-6">
           <Link to="/" className="flex min-w-0 items-center gap-2.5">
             <span className="min-w-0">
@@ -156,7 +161,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         <main className="min-w-0 flex-1">{children}</main>
       </div>
 
-              <nav className="fixed inset-x-0 bottom-0 z-30 border-t border-border backdrop-blur-xl lg:hidden">
+      <nav className="fixed inset-x-0 bottom-0 z-30 border-t border-border backdrop-blur-xl lg:hidden">
         <div className="mx-auto flex max-w-md items-stretch justify-around px-2 py-2">
           {NAV.map((item) => {
             const active = pathname === item.to;
