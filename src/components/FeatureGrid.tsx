@@ -16,12 +16,12 @@ export const FeatureGrid: React.FC<FeatureGridProps> = memo(({ variant = "compac
 
   if (variant === "compact") {
     return (
-      <div
-        className={cn(
-          "grid grid-cols-2 gap-2.5 sm:grid-cols-3 lg:grid-cols-4",
-          className,
-        )}
-      >
+        <div
+          className={cn(
+            "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2.5",
+            className,
+          )}
+        >
         {features.map((feature) => (
           <button
             key={feature.id}
@@ -49,13 +49,23 @@ export const FeatureGrid: React.FC<FeatureGridProps> = memo(({ variant = "compac
   }
 
   return (
-    <div
-      className={cn("grid gap-4 sm:grid-cols-2 xl:grid-cols-3", className)}
-    >
+      <div
+        className={cn("grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4", className)}
+      >
       {features.map((feature) => (
         <article
           key={feature.id}
-          className="surface flex flex-col p-5 transition-shadow hover:shadow-float"
+          role="button"
+          tabIndex={0}
+          aria-label={`${feature.title}: ${feature.shortDescription}`}
+          className="surface flex flex-col p-5 transition-shadow hover:shadow-float focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+          onClick={() => onSelect(feature)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" || e.key === " ") {
+              e.preventDefault();
+              onSelect(feature);
+            }
+          }}
         >
           <span className="grid size-11 place-items-center rounded-2xl bg-muted text-foreground">
             <feature.icon className="size-5" />
