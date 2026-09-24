@@ -29,6 +29,7 @@ export type Note = {
   source: string;
   createdAt: number;
   attachment?: Attachment;
+  color?: string;
 };
 
 const STORAGE_KEY = "agenda-inteligente:notes";
@@ -307,6 +308,7 @@ export function useNotes() {
       ...note,
       id: crypto.randomUUID(),
       createdAt: Date.now(),
+      color: "blue",
       ...(file ? { attachmentBlob: file } : {}),
     };
     await putValue<StoredNote>(NOTES_STORE, stored);
