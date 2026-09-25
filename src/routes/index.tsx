@@ -42,7 +42,7 @@ export const Route = createFileRoute("/")({
 
 const SAMPLE = SAMPLE_TEXT;
 
-function CapturePage(): JSX.Element {
+function CapturePage() {
   const { action } = Route.useSearch();
   const navigate = useNavigate();
   const { notes } = useNotes();

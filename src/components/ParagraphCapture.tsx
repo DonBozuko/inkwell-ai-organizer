@@ -75,7 +75,7 @@ function CaptureForm({ text, source, attachment, file, onSaved, close }: MenuPro
       const urlRegex = /(https?:\/\/[^\s]+)/g;
       const processedText = sanitizedText.replace(urlRegex, (match) => (isValidUrl(match) ? match : ""));
       await addNote({
-        title: sanitizedTitle,
+        title: trimmedTitle,
         text: processedText,
         category: cat,
         tags: tagsArray,
