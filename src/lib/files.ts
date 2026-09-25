@@ -55,10 +55,10 @@ async function imageToAttachment(file: File): Promise<Attachment> {
 
 async function pdfToParagraphs(file: File): Promise<string[]> {
   const pdfjs = await import("pdfjs-dist");
-  pdfjs.GlobalWorkerOptions.workerSrc = new URL(
-    "pdfjs-dist/build/pdf.worker.min.mjs",
-    import.meta.url,
-  ).toString();
+    pdfjs.GlobalWorkerOptions.workerSrc = new URL(
+      "pdfjs-dist/build/pdf.worker.min.js",
+      import.meta.url,
+    ).toString();
   const buffer = await file.arrayBuffer();
   const pdf = await pdfjs.getDocument({ data: buffer }).promise;
   const parts: string[] = [];
