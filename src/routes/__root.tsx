@@ -128,6 +128,7 @@ function RootShell({ children }: { children: ReactNode }) {
     <html lang="pt-BR">
       <head>
         <HeadContent />
+        <style>{`.feed-inteligente{color:#000;font-weight:700;}`}</style>
       </head>
       <body>
         {children}
