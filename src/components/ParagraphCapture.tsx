@@ -83,7 +83,7 @@ function CaptureForm({ text, source, attachment, file, onSaved, close }: MenuPro
         ...(attachment ? { attachment } : {}),
       }, file);
       toast.success(`Nota salva na pasta ${categoryLabel(cat)}!`, {
-        description: sanitizedTitle,
+        description: trimmedTitle,
       });
       onSaved();
       close();
