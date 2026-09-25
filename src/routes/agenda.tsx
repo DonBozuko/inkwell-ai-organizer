@@ -11,7 +11,7 @@ import {
   Sparkles,
   Trash2,
 } from "lucide-react";
-import { useState } from "react";
+import { useState, type FC } from "react";
 import { toast } from "sonner";
 
 import { AppShell } from "@/components/AppShell";
@@ -54,51 +54,67 @@ export const Route = createFileRoute("/agenda")({
 });
 
 function download(note: Note) {
-  const blob = new Blob([noteToMarkdown(note)], {
-    type: "text/markdown;charset=utf-8",
-  });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = `${note.title
-    .replace(/[^\p{L}\p{N} -]/gu, "")
-    .slice(0, 48)
-    .trim() || "nota"
+  try {
+    const blob = new Blob([noteToMarkdown(note)], {
+      type: "text/markdown;charset=utf-8",
+    });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${note.title
+      .replace(/[^\p{L}\p{N} -]/gu, "")
+      .slice(0, 48)
+      .trim() || "nota"
     }.md`;
-  a.click();
-  URL.revokeObjectURL(url);
-  toast.success("Download iniciado!", {
-    description: "Arquivo .md salvo no dispositivo.",
-  });
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    toast.success("Download iniciado!", {
+      description: "Arquivo .md salvo no dispositivo.",
+    });
+  } catch {
+    toast.error("Não foi possível baixar a nota.");
+  }
 }
 
 async function share(note: Note) {
-  const text = noteToMarkdown(note);
-  if (typeof navigator !== "undefined" && navigator.share) {
-    try {
-      await navigator.share({ title: note.title, text });
-      return;
-    } catch {
-      // usuário cancelou — cai para o clipboard
-    }
-  }
   try {
-    await navigator.clipboard.writeText(text);
-    toast.success("Texto formatado copiado!", {
-      description: "Cole onde quiser.",
-    });
+    const text = noteToMarkdown(note);
+    if (typeof navigator !== "undefined" && navigator.share) {
+      try {
+        await navigator.share({ title: note.title, text });
+        return;
+      } catch {
+        // usuário cancelou — cai para o clipboard
+      }
+    }
+    if (typeof navigator !== "undefined" && navigator.clipboard) {
+      await navigator.clipboard.writeText(text);
+      toast.success("Texto formatado copiado!", {
+        description: "Cole onde quiser.",
+      });
+    } else {
+      toast.error("Compartilhamento indisponível neste navegador.");
+    }
   } catch {
     toast.error("Não foi possível compartilhar.");
   }
 }
 
-function NoteCard({
-  note,
-  onRemove,
-}: {
+type NoteCardProps = {
   note: Note;
   onRemove: () => void;
-}) {
+};
+
+const NoteCard: FC<NoteCardProps> = ({ note, onRemove }) => {
+  const isImage =
+    note.attachment?.kind === "image" &&
+    typeof note.attachment.dataUrl === "string" &&
+    note.attachment.dataUrl.length > 0;
+
+  const isFile = note.attachment?.kind === "file";
+
   return (
     <article className="surface rise-in p-4 sm:p-5">
       <header className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3">
@@ -116,11 +132,12 @@ function NoteCard({
         </Badge>
       </header>
 
-      {note.attachment?.kind === "image" && note.attachment.dataUrl && (
+      {isImage && typeof note.attachment?.dataUrl === "string" && (
         <img
           src={note.attachment.dataUrl}
-          alt={note.attachment.name}
+          alt={note.attachment.name ?? "Anexo de imagem"}
           className="mt-3 max-h-64 w-full rounded-xl object-cover"
+          loading="lazy"
         />
       )}
 
@@ -130,11 +147,12 @@ function NoteCard({
         </p>
       )}
 
-      {note.attachment?.kind === "file" && (
+      {isFile && (
         <p className="mt-3 flex items-center gap-1.5 text-xs text-muted-foreground">
           <FileText className="size-3.5 shrink-0" />
           <span className="truncate">
-            {note.attachment.name} · {formatBytes(note.attachment.size)}
+            {note.attachment?.name ?? "Anexo"} ·{" "}
+            {formatBytes(note.attachment?.size ?? 0)}
           </span>
         </p>
       )}
@@ -152,9 +170,11 @@ function NoteCard({
         </div>
       )}
 
-      <p className="mt-3 flex items-center gap-1.5 truncate text-xs text-muted-foreground">
+      <p className="mt-3 flex items-center gap-1.5 text-xs text-muted-foreground">
         <Link2 className="size-3.5 shrink-0" />
-        <span className="truncate">{note.source}</span>
+        <span className="truncate" title={note.source}>
+          {note.source}
+        </span>
       </p>
 
       <footer className="mt-4 flex flex-wrap gap-2 border-t border-border pt-4">
@@ -167,7 +187,11 @@ function NoteCard({
           <Download className="size-4" />
           Download
         </Button>
-        <Button size="lg" className="h-11 flex-1 gap-2" onClick={() => share(note)}>
+        <Button
+          size="lg"
+          className="h-11 flex-1 gap-2"
+          onClick={() => void share(note)}
+        >
           <Share2 className="size-4" />
           Compartilhar
         </Button>
@@ -183,31 +207,44 @@ function NoteCard({
       </footer>
     </article>
   );
-}
+};
 
-const QUICK = [
+type QuickDef = {
+  readonly id: "hoje" | "anexo" | "tarefas";
+  readonly label: string;
+  readonly icon: FC<{ className?: string }>;
+};
+
+const QUICK: readonly QuickDef[] = [
   { id: "hoje", label: "Hoje", icon: Clock },
   { id: "anexo", label: "Com anexo", icon: Paperclip },
   { id: "tarefas", label: "Tarefas", icon: ListTodo },
 ] as const;
 
-type QuickId = (typeof QUICK)[number]["id"];
+type QuickId = QuickDef["id"];
+type CategoryIdOrAll = CategoryId | "todas";
 
-function AgendaPage() {
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+const AgendaPage: FC = () => {
   const { cat } = Route.useSearch();
   const { notes, removeNote } = useNotes();
   const { categories } = useCategories();
-  const [quick, setQuick] = useState<QuickId[]>([]);
+  const [quick, setQuick] = useState<readonly QuickId[]>([]);
 
-  // Combine a fake "todas" category with the real ones, casting to satisfy TypeScript.
-  const allCategories = [
-    { id: "todas" as const, label: "Todas" },
-    ...categories,
-  ] as const;
+  const allCategories: ReadonlyArray<{
+    id: CategoryIdOrAll;
+    label: string;
+  }> = [
+    { id: "todas", label: "Todas" },
+    ...categories.map((c) => ({ id: c.id, label: c.label })),
+  ];
 
-  const byCat = cat !== "todas" ? notes.filter((n) => n.category === cat) : notes;
+  const byCat =
+    cat !== "todas" ? notes.filter((n) => n.category === cat) : notes;
+
   const filtered = byCat.filter((n) => {
-    if (quick.includes("hoje") && Date.now() - n.createdAt > 24 * 60 * 60 * 1000)
+    if (quick.includes("hoje") && Date.now() - n.createdAt > DAY_MS)
       return false;
     if (quick.includes("anexo") && !n.attachment) return false;
     if (quick.includes("tarefas") && n.category !== "tarefas") return false;
@@ -215,7 +252,19 @@ function AgendaPage() {
   });
 
   const toggle = (id: QuickId) =>
-    setQuick((prev) => (prev.includes(id) ? prev.filter((q) => q !== id) : [...prev, id]));
+    setQuick((prev) =>
+      prev.includes(id) ? prev.filter((q) => q !== id) : [...prev, id],
+    );
+
+  const handleRemove = (noteId: string) => () => {
+    try {
+      void removeNote(noteId).catch(() => {
+        toast.error("Não foi possível excluir a nota.");
+      });
+    } catch {
+      toast.error("Não foi possível excluir a nota.");
+    }
+  };
 
   return (
     <AppShell>
@@ -235,7 +284,7 @@ function AgendaPage() {
             <Link
               key={c.id}
               to="/agenda"
-              search={{ cat: c.id as Search["cat"] }}
+              search={{ cat: c.id }}
               className={cn(
                 "shrink-0 rounded-full border px-4 py-2.5 text-sm font-medium transition-colors",
                 cat === c.id
@@ -251,6 +300,7 @@ function AgendaPage() {
         <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:px-0">
           {QUICK.map((q) => {
             const active = quick.includes(q.id);
+            const Icon = q.icon;
             return (
               <button
                 key={q.id}
@@ -264,7 +314,7 @@ function AgendaPage() {
                     : "border-border text-muted-foreground hover:bg-accent",
                 )}
               >
-                <q.icon className="size-4" />
+                <Icon className="size-4" />
                 {q.label}
               </button>
             );
@@ -281,7 +331,9 @@ function AgendaPage() {
         {filtered.length === 0 ? (
           <div className="surface flex flex-col items-center gap-3 p-10 text-center">
             <Inbox className="size-8 text-muted-foreground" />
-            <p className="text-sm text-muted-foreground">Nenhuma nota aqui ainda.</p>
+            <p className="text-sm text-muted-foreground">
+              Nenhuma nota aqui ainda.
+            </p>
             <Button asChild size="lg" className="h-12">
               <Link to="/">Capturar conteúdo</Link>
             </Button>
@@ -292,11 +344,7 @@ function AgendaPage() {
               <NoteCard
                 key={n.id}
                 note={n}
-                onRemove={() =>
-                  void removeNote(n.id).catch(() =>
-                    toast.error("Não foi possível excluir a nota."),
-                  )
-                }
+                onRemove={handleRemove(n.id)}
               />
             ))}
           </div>
@@ -304,4 +352,4 @@ function AgendaPage() {
       </div>
     </AppShell>
   );
-}
+};
