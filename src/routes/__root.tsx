@@ -123,20 +123,21 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
   errorComponent: ErrorComponent,
 });
 
-const RootShell = ({ children }: { children: ReactNode }): JSX.Element => (
-  <html lang="en">
-    <head>
-      <HeadContent />
-      <style>{`.feed-inteligente{color:#000;font-weight:700;}`}</style>
-    </head>
-    <body>
-      {children}
-      <Scripts />
-    </body>
-  </html>
-);
+function RootShell({ children }: { children: ReactNode }) {
+  return (
+    <html lang="pt-BR">
+      <head>
+        <HeadContent />
+      </head>
+      <body>
+        {children}
+        <Scripts />
+      </body>
+    </html>
+  );
+}
 
-const RootComponent = (): JSX.Element => {
+function RootComponent() {
   const { queryClient } = Route.useRouteContext();
 
   return (
@@ -145,4 +146,4 @@ const RootComponent = (): JSX.Element => {
       <Toaster position="top-center" richColors />
     </QueryClientProvider>
   );
-};
+}
