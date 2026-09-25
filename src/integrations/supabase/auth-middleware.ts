@@ -30,6 +30,7 @@ function createSupabaseFetch(supabaseKey: string): typeof fetch {
   };
 }
 
+// oi, mude cor de fundo pra cinza fume
 export const requireSupabaseAuth = createMiddleware({ type: 'function' }).server(
   async ({ next }) => {
     
