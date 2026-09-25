@@ -160,7 +160,7 @@ function CapturePage() {
     <div className="min-h-screen bg-blue-50/50">
       <AppShell>
         <div className="space-y-6">
-        <section className="surface rise-in p-5 sm:p-6">
+        <section className="surface rise-in p-5 sm:p-6 font-['Century_Gothic','CenturyGothic',sans-serif]">
           <h1 className="text-2xl font-extrabold tracking-tight sm:text-3xl text-preco">
           Agenda Inteligente
           </h1>
