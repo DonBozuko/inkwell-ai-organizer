@@ -226,7 +226,7 @@ type CategoryIdOrAll = CategoryId | "todas";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
-const AgendaPage: FC = () => {
+function AgendaPage() {
   const { cat } = Route.useSearch();
   const { notes, removeNote } = useNotes();
   const { categories } = useCategories();

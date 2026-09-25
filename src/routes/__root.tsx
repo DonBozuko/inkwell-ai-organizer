@@ -13,7 +13,7 @@ import appCss from "../styles.css?url";
 import { Toaster } from "@/components/ui/sonner";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 
-const NotFoundComponent = (): JSX.Element => (
+const NotFoundComponent = () => (
   <div className="flex min-h-screen items-center justify-center bg-background px-4">
     <div className="max-w-md text-center">
       <h1 className="text-7xl font-bold text-foreground">404</h1>
@@ -38,7 +38,7 @@ type ErrorComponentProps = {
   reset: () => void;
 };
 
-const ErrorComponent = ({ error, reset }: ErrorComponentProps): JSX.Element => {
+const ErrorComponent = ({ error, reset }: ErrorComponentProps) => {
   console.error(error);
   const router = useRouter();
 
