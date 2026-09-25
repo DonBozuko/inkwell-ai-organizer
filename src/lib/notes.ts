@@ -133,13 +133,27 @@ export function formatBytes(bytes: number) {
 }
 
 if (typeof document !== "undefined") {
+  const fontImportId = "global-font-import";
+  if (!document.getElementById(fontImportId)) {
+    const link = document.createElement("link");
+    link.id = fontImportId;
+    link.rel = "stylesheet";
+    link.href = "https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap";
+    document.head.appendChild(link);
+  }
+
   const styleId = "global-professional-font";
   if (!document.getElementById(styleId)) {
     const style = document.createElement("style");
     style.id = styleId;
     style.innerHTML = `
       * {
-        font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif !important;
+        font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif !important;
+        color: purple !important;
+      }
+      body {
+        font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif !important;
+        color: purple !important;
       }
     `;
     document.head.appendChild(style);
