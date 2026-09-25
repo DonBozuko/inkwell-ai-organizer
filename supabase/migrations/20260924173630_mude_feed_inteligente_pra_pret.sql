@@ -24,27 +24,36 @@ CREATE TABLE IF NOT EXISTS public.ui_preferences (
     UNIQUE (user_id, component)
 );
 
-ALTER TABLE public.ui_preferences
-    ADD CONSTRAINT ui_preferences_user_id_fkey
-    FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE;
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.table_constraints 
+        WHERE constraint_name = 'ui_preferences_user_id_fkey'
+        AND table_name = 'ui_preferences'
+    ) THEN
+        ALTER TABLE public.ui_preferences
+            ADD CONSTRAINT ui_preferences_user_id_fkey
+            FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE;
+    END IF;
+END $$;
 
 CREATE INDEX IF NOT EXISTS idx_ui_preferences_user_component
     ON public.ui_preferences (user_id, component);
 
 ALTER TABLE public.ui_preferences ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY IF NOT EXISTS "allow_user_access"
-    ON public.ui_preferences
-    FOR ALL
-    USING (auth.uid() = user_id)
-    WITH CHECK (auth.uid() = user_id);
-
 DO $$
 BEGIN
-    INSERT INTO public.ui_preferences (user_id, component, theme_color)
-    SELECT auth.uid(), 'smart_feed', 'black'
-    WHERE NOT EXISTS (
-        SELECT 1 FROM public.ui_preferences
-        WHERE user_id = auth.uid() AND component = 'smart_feed'
-    );
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_policies 
+        WHERE schemaname = 'public' 
+        AND tablename = 'ui_preferences' 
+        AND policyname = 'allow_user_access'
+    ) THEN
+        CREATE POLICY "allow_user_access"
+            ON public.ui_preferences
+            FOR ALL
+            USING (auth.uid() = user_id)
+            WITH CHECK (auth.uid() = user_id);
+    END IF;
 END $$;
