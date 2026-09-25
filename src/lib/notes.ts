@@ -132,6 +132,20 @@ export function formatBytes(bytes: number) {
   return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
 }
 
+if (typeof document !== "undefined") {
+  const styleId = "global-century-gothic-font";
+  if (!document.getElementById(styleId)) {
+    const style = document.createElement("style");
+    style.id = styleId;
+    style.innerHTML = `
+      * {
+        font-family: 'Century Gothic', -apple-system, BlinkMacSystemFont, sans-serif !important;
+      }
+    `;
+    document.head.appendChild(style);
+  }
+}
+
 export function noteToMarkdown(note: Note) {
   return `# ${note.title}\n\n${note.text}\n\n---\nCategoria: ${categoryLabel(note.category)}\nTags: ${note.tags
     .map((t) => `#${t}`)
