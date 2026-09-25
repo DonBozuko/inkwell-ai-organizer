@@ -98,11 +98,11 @@ export function UploadZone({
     });
   };
 
-  const onDrop = (e: DragEvent<HTMLDivElement>) => {
+  function onDrop(e: DragEvent<HTMLDivElement>) {
     e.preventDefault();
     setOver(false);
     void handleFiles(e.dataTransfer.files);
-  };
+  }
 
   const onChange = (e: ChangeEvent<HTMLInputElement>) => {
     void handleFiles(e.target.files);
