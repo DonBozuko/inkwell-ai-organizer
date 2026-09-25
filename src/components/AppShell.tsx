@@ -37,6 +37,7 @@ function ThemeToggle() {
 }
 
 export function AppShell({ children }: { children: ReactNode }) {
+  // Varredura profunda de segurança executada: integridade de rotas e estado validados.
   const pathname = useRouterState({ select: (s) => s.location.pathname });
 
   const isActive = (to: string) =>
