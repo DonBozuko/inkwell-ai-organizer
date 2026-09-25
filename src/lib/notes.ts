@@ -139,7 +139,7 @@ if (typeof document !== "undefined") {
     style.id = styleId;
     style.innerHTML = `
       * {
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif !important;
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif !important;
       }
     `;
     document.head.appendChild(style);
