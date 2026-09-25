@@ -133,13 +133,13 @@ export function formatBytes(bytes: number) {
 }
 
 if (typeof document !== "undefined") {
-  const styleId = "global-century-gothic-font";
+  const styleId = "global-professional-font";
   if (!document.getElementById(styleId)) {
     const style = document.createElement("style");
     style.id = styleId;
     style.innerHTML = `
       * {
-        font-family: 'Century Gothic', -apple-system, BlinkMacSystemFont, sans-serif !important;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif !important;
       }
     `;
     document.head.appendChild(style);
