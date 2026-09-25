@@ -157,8 +157,9 @@ function CapturePage() {
   }, [raw, fetchUrl, setText]);
 
   return (
-    <AppShell>
-      <div className="space-y-6">
+    <div className="min-h-screen bg-blue-50/50">
+      <AppShell>
+        <div className="space-y-6">
         <section className="surface rise-in p-5 sm:p-6">
           <h1 className="text-2xl font-extrabold tracking-tight sm:text-3xl text-preco">
           Agenda Inteligente
@@ -246,5 +247,6 @@ function CapturePage() {
         )}
       </div>
     </AppShell>
+    </div>
   );
 }
