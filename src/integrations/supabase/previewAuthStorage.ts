@@ -14,7 +14,7 @@ export function brokeredPreviewStorage() {
     ? (host.match(new RegExp('^(?:id-preview(?:-[a-z0-9]+)?|project)--(' + UUID + ')(?:-dev)?(?=\\.|$)', 'i'))?.[1]
         ?? host.match(new RegExp('^(' + UUID + ')(?=[.-])', 'i'))?.[1])
     : undefined;
-  const framed = window.parent && window.parent !== window;
+  const framed = typeof window !== 'undefined' && window.parent && window.parent !== window;
   if (!projectId || !framed) return localStorage;
 
   // Post only to the real editor ancestor, validated as a Lovable origin, so the
