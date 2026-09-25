@@ -50,7 +50,7 @@ const AccordionTrigger = React.forwardRef<
     if (!trigger) return;
 
     const update = () => {
-      const state = trigger.dataset.state;
+      const state = trigger.dataset["state"];
       if (state) {
         trigger.setAttribute("aria-expanded", state === "open" ? "true" : "false");
       }
