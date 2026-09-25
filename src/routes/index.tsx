@@ -51,7 +51,7 @@ function CapturePage() {
   const [loading, setLoading] = useState<boolean>(false);
   const [content, setContent] = useState<{ items: FeedItem[]; source: string } | null>(null);
 
-  const fetchUrl = useServerFn<{ text: string }, { data: { url: string } }>(readUrl);
+  const fetchUrl = useServerFn(readUrl);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const openUpload = useRef<(() => void) | null>(null);
 

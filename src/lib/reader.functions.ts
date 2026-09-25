@@ -5,7 +5,7 @@ import { extractTitle, htmlToText } from "@/lib/reader.server";
 
 /** Lê um link no servidor (sem restrições de CORS) e devolve o texto limpo. */
 export const readUrl = createServerFn({ method: "POST" })
-  .validator((data) => z.object({ url: z.string().url() }).parse(data))
+  .inputValidator((data) => z.object({ url: z.string().url() }).parse(data))
   .handler(async ({ data }) => {
     const attempts = [`https://r.jina.ai/${data.url}`, data.url];
 
