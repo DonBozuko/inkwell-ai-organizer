@@ -12,7 +12,7 @@ CREATE TABLE IF NOT EXISTS public.agendas (
     id uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
     user_id uuid NOT NULL REFERENCES public.users(id) ON DELETE CASCADE,
     name text NOT NULL,
-    color text NOT NULL DEFAULT 'blue',
+    color text NOT NULL DEFAULT '#00C896',
     created_at timestamptz NOT NULL DEFAULT now()
 );
 
