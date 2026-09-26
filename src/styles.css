@@ -151,12 +151,14 @@
   * {
     border-color: var(--color-border);
     font-family: 'Century Gothic', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+    text-transform: lowercase;
   }
 
   body {
     background-color: var(--color-background);
     color: var(--color-foreground);
     font-family: 'Century Gothic', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+    text-transform: lowercase;
     -webkit-tap-highlight-color: transparent;
   }
 }
