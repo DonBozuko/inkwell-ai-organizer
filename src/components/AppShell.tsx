@@ -51,7 +51,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             <span className="grid size-8 place-items-center rounded-xl bg-[#00FF66] text-black">
               <Sparkles className="size-4" />
             </span>
-            <span className="text-[#8B0000] dark:text-[#FF4D4D]">Agenda Inteligente</span>
+            Agenda Inteligente
           </Link>
 
           <nav className="hidden items-center gap-1 sm:flex" aria-label="Navegação principal">
