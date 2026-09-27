@@ -14,37 +14,18 @@ export function brokeredPreviewStorage() {
     ? (host.match(new RegExp('^(?:id-preview(?:-[a-z0-9]+)?|project)--(' + UUID + ')(?:-dev)?(?=\\.|$)', 'i'))?.[1]
         ?? host.match(new RegExp('^(' + UUID + ')(?=[.-])', 'i'))?.[1])
     : undefined;
-  const framed = typeof window !== 'undefined' && window.parent && window.parent !== window;
+  const framed = window.parent && window.parent !== window;
   if (!projectId || !framed) return localStorage;
 
-  // Post only to the real editor ancestor, validated securely as a trusted Lovable origin, 
-  // ensuring strict sanitization and domain restriction to prevent token interception.
+  // Post only to the real editor ancestor, validated as a Lovable origin, so the
+  // session token can never reach an untrusted embedder.
   const dev = host.endsWith('.lovableproject-dev.com') || host.endsWith('.gpt-eng.com');
   const EDITOR = dev
     ? /^https:\/\/([a-z0-9-]+\.)*(lovable\.dev|gptengineer\.app)$|^http:\/\/localhost:3000$/
     : /^https:\/\/([a-z0-9-]+\.)*(lovable\.dev|gptengineer\.app)$/;
-  
-  let rawAncestor = '';
-  try {
-    rawAncestor = (location.ancestorOrigins && location.ancestorOrigins[0]) || (document.referrer ? new URL(document.referrer).origin : '');
-  } catch {
-    rawAncestor = '';
-  }
-  
-  const sanitizedAncestor = (() => {
-    if (!rawAncestor) return '';
-    try {
-      const parsed = new URL(rawAncestor);
-      // Ensure only http/https protocols are allowed
-      if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') return '';
-      return parsed.origin;
-    } catch {
-      return '';
-    }
-  })();
-
-  const editorOrigins = sanitizedAncestor && EDITOR.test(sanitizedAncestor)
-    ? [sanitizedAncestor]
+  const ancestor = (location.ancestorOrigins && location.ancestorOrigins[0]) || (document.referrer ? new URL(document.referrer).origin : '');
+  const editorOrigins = ancestor && EDITOR.test(ancestor)
+    ? [ancestor]
     : (dev ? ['https://lovable.dev', 'http://localhost:3000'] : ['https://lovable.dev']);
   const RESULT = 'lovable-preview-auth:result';
   const TIMEOUT = 2000;
@@ -97,7 +78,12 @@ export function brokeredPreviewStorage() {
     },
     setItem: (key: string, value: string) => {
       localStorage.setItem(key, value);
-      return request('lovable-preview-auth:set', key, value).then(() => undefined);
+      return request('lovable-preview-auth:set', key, value).then((res) => {
+        if (res && res.ok && typeof res.value === 'string' && localStorage.getItem(key) === value) {
+          if (res.value === '') localStorage.removeItem(key);
+          else localStorage.setItem(key, res.value);
+        }
+      });
     },
     removeItem: (key: string) => {
       localStorage.removeItem(key);
