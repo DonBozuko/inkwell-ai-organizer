@@ -52,7 +52,7 @@ function FuncoesPage() {
           </p>
         </header>
 
-        <div className="[&_button:has-text('Markdown'),&_a:has-text('Markdown'),&_span:has-text('Markdown')]:text-black [&_button:has-text('Markdown'),&_a:has-text('Markdown'),&_span:has-text('Markdown')]:font-bold">
+        <div className="[&_button:has-text('Markdown'),&_a:has-text('Markdown'),&_span:has-text('Markdown')]:!text-black [&_button:has-text('Markdown'),&_a:has-text('Markdown'),&_span:has-text('Markdown')]:!font-bold">
           <FeatureGrid variant="expanded" onSelect={handle} />
         </div>
       </div>
