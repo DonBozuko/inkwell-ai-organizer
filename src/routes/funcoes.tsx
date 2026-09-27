@@ -52,7 +52,9 @@ function FuncoesPage() {
           </p>
         </header>
 
-        <FeatureGrid variant="expanded" onSelect={handle} />
+        <div className="[&_button:has-text('Markdown'),_a:has-text('Markdown'),_.markdown-feature]:text-black! [&_button:has-text('Markdown'),_a:has-text('Markdown'),_.markdown-feature]:font-bold!">
+          <FeatureGrid variant="expanded" onSelect={handle} />
+        </div>
       </div>
     </AppShell>
   );
