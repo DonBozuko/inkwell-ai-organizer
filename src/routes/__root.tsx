@@ -77,6 +77,32 @@ const ErrorComponent = ({ error, reset }: ErrorComponentProps) => {
   );
 };
 
+function RootShell({ children }: { children: ReactNode }) {
+  return (
+    <html lang="pt-BR">
+      <head>
+        <HeadContent />
+        <style>{`.feed-inteligente{color:#000;font-weight:700;}`}</style>
+      </head>
+      <body>
+        {children}
+        <Scripts />
+      </body>
+    </html>
+  );
+}
+
+function RootComponent() {
+  const { queryClient } = Route.useRouteContext();
+
+  return (
+    <QueryClientProvider client={queryClient}>
+      <Outlet />
+      <Toaster position="top-center" richColors />
+    </QueryClientProvider>
+  );
+}
+
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
   head: () => ({
     meta: [
@@ -122,29 +148,3 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
   notFoundComponent: NotFoundComponent,
   errorComponent: ErrorComponent,
 });
-
-function RootShell({ children }: { children: ReactNode }) {
-  return (
-    <html lang="pt-BR">
-      <head>
-        <HeadContent />
-        <style>{`.feed-inteligente{color:#000;font-weight:700;}`}</style>
-      </head>
-      <body>
-        {children}
-        <Scripts />
-      </body>
-    </html>
-  );
-}
-
-function RootComponent() {
-  const { queryClient } = Route.useRouteContext();
-
-  return (
-    <QueryClientProvider client={queryClient}>
-      <Outlet />
-      <Toaster position="top-center" richColors />
-    </QueryClientProvider>
-  );
-}
