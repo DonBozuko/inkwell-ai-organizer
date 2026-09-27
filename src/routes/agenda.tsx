@@ -181,7 +181,8 @@ const NoteCard: FC<NoteCardProps> = ({ note, onRemove }) => {
         <Button
           variant="outline"
           size="lg"
-          className="h-11 flex-1 gap-2 font-bold text-black dark:text-black"
+          className="h-11 flex-1 gap-2 font-black text-black dark:text-black"
+          style={{ color: "#000000", fontWeight: "900" }}
           onClick={() => download(note)}
         >
           <Download className="size-4" />
