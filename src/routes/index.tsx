@@ -103,6 +103,12 @@ function CapturePage() {
           setText(SAMPLE, "Exemplo");
           setTimeout(focusField, 0);
           return;
+        case "new-folder":
+        case "nova-pasta":
+          handleSharedFeature(feature, notes, () => {
+            void navigate({ to: "/agenda", search: { cat: "todas" } });
+          });
+          return;
         default:
           handleSharedFeature(feature, notes, () => {
             void navigate({ to: "/agenda", search: { cat: "todas" } });
@@ -172,7 +178,9 @@ function CapturePage() {
             <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-muted-foreground">
               Melhores funções
             </p>
-            <FeatureGrid onSelect={runFeature} />
+            <div className="[&_button:has-text('Pasta'),_button:has-text('Nova Pasta'),_a:has-text('Pasta'),_[data-feature*='folder']]:text-orange-500 [&_.text-orange]:text-orange-500">
+              <FeatureGrid onSelect={runFeature} />
+            </div>
           </div>
 
           <Textarea
