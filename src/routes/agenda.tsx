@@ -323,8 +323,7 @@ function AgendaPage() {
           })}
           <Link
             to="/"
-            className="flex shrink-0 items-center gap-1.5 rounded-full border border-border px-4 py-2.5 text-sm font-medium text-[#111111] dark:text-[#111111] transition-colors hover:bg-accent"
-            style={{ color: "#111111" }}
+            className="flex shrink-0 items-center gap-1.5 rounded-full border border-border px-4 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent"
           >
             <Sparkles className="size-4" />
             Capturar agora
