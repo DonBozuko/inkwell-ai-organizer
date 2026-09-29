@@ -162,7 +162,7 @@ function CapturePage() {
         <div className="space-y-6">
         <section className="surface rise-in p-5 sm:p-6 font-['Century_Gothic','CenturyGothic',sans-serif]">
           <h1 className="text-2xl font-extrabold tracking-tight sm:text-3xl text-preco">
-          Agenda Inteligente
+          Agenda <span className="text-gray-900 dark:text-gray-100">Nova Nota</span>
           </h1>
           <p className="mt-1.5 text-sm text-muted-foreground">
             Cole um link, um texto copiado — ou envie PDFs, imagens e pastas inteiras.
