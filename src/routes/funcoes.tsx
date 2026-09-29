@@ -48,7 +48,7 @@ function FuncoesPage() {
         <header>
           <h1 className="text-2xl font-extrabold tracking-tight sm:text-3xl">Melhores Funções</h1>
           <p className="mt-1.5 text-sm text-muted-foreground">
-            Todos os atalhos do app reunidos. Toque em uma função para <span className="text-orange-500">enviar arquivo</span> agora.
+            Todos os atalhos do app reunidos. Toque em uma função para executá-la agora.
           </p>
         </header>
 
