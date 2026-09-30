@@ -286,7 +286,6 @@ function AgendaPage() {
               key={c.id}
               to="/agenda"
               search={{ cat: c.id }}
-              style={c.id !== "todas" ? { color: "#ff8c00" } : undefined}
               className={cn(
                 "shrink-0 rounded-full border px-4 py-2.5 text-sm font-medium transition-colors",
                 cat === c.id
