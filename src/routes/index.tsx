@@ -204,7 +204,7 @@ function CapturePage() {
             <Button
               size="lg"
               variant="ghost"
-              className="h-12"
+              className="h-12 text-orange-500 hover:text-orange-600 hover:bg-orange-50"
               onClick={() => {
                 setRaw(SAMPLE);
                 setText(SAMPLE, "Exemplo");
