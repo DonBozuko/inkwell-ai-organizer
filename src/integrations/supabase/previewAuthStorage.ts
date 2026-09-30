@@ -61,7 +61,7 @@ export function brokeredPreviewStorage() {
   const RETRY_DELAY = 250;
 
   return {
-    getItem: async (key: string): Promise<string | null> => {
+    getItem: async (key: string) => {
       let res = await request('lovable-preview-auth:get', key);
       if (!res && firstGet) {
         await new Promise((r) => setTimeout(r, RETRY_DELAY));
@@ -76,17 +76,18 @@ export function brokeredPreviewStorage() {
       }
       return localStorage.getItem(key);
     },
-    setItem: async (key: string, value: string): Promise<void> => {
+    setItem: (key: string, value: string) => {
       localStorage.setItem(key, value);
-      const res = await request('lovable-preview-auth:set', key, value);
-      if (res && res.ok && typeof res.value === 'string' && localStorage.getItem(key) === value) {
-        if (res.value === '') localStorage.removeItem(key);
-        else localStorage.setItem(key, res.value);
-      }
+      return request('lovable-preview-auth:set', key, value).then((res) => {
+        if (res && res.ok && typeof res.value === 'string' && localStorage.getItem(key) === value) {
+          if (res.value === '') localStorage.removeItem(key);
+          else localStorage.setItem(key, res.value);
+        }
+      });
     },
-    removeItem: async (key: string): Promise<void> => {
+    removeItem: (key: string) => {
       localStorage.removeItem(key);
-      await request('lovable-preview-auth:remove', key);
+      return request('lovable-preview-auth:remove', key).then(() => undefined);
     },
   };
 }
