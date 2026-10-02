@@ -184,7 +184,7 @@ function CapturePage() {
           />
 
           <div className="mt-4 flex flex-col gap-2 sm:flex-row">
-            <Button size="lg" className="h-12 flex-1 gap-2" onClick={process} disabled={loading}>
+            <Button size="lg" className="h-12 flex-1 gap-2 bg-emerald-600 hover:bg-emerald-700 text-white" onClick={process} disabled={loading}>
               {loading ? (
                 <Loader2 className="size-4 animate-spin" />
               ) : (
@@ -195,16 +195,16 @@ function CapturePage() {
             <Button
               size="lg"
               variant="outline"
-              className="h-12 gap-2 text-orange-500 hover:text-orange-600 hover:bg-orange-50 border-orange-200"
+              className="h-12 gap-2 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 border-emerald-200"
               onClick={() => void pasteFromClipboard()}
             >
-              <ClipboardPaste className="size-4 text-orange-500" />
+              <ClipboardPaste className="size-4 text-emerald-600" />
               Colar
             </Button>
             <Button
               size="lg"
               variant="ghost"
-              className="h-12 text-orange-500 hover:text-orange-600 hover:bg-orange-50"
+              className="h-12 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50"
               onClick={() => {
                 setRaw(SAMPLE);
                 setText(SAMPLE, "Exemplo");
@@ -241,7 +241,7 @@ function CapturePage() {
               ))}
             </div>
             <p className="mt-6 text-center text-xs text-muted-foreground">
-              Passe o mouse ou toque em um item e clique no marcador azul para capturar.
+              Passe o mouse ou toque em um item e clique no marcador para capturar.
             </p>
           </section>
         )}
