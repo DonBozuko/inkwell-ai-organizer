@@ -164,12 +164,12 @@ function CapturePage() {
           <h1 className="text-2xl font-extrabold tracking-tight sm:text-3xl text-black">
           Agenda Inteligente
           </h1>
-          <p className="mt-1.5 text-sm text-muted-foreground">
+          <p className="mt-1.5 text-sm text-black">
             Cole um link, um texto copiado — ou envie PDFs, imagens e pastas inteiras.
           </p>
 
           <div className="mt-4">
-            <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+            <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-black">
               Melhores funções
             </p>
             <FeatureGrid onSelect={runFeature} />
@@ -180,7 +180,7 @@ function CapturePage() {
             value={raw}
             onChange={(e) => setRaw(e.target.value)}
             placeholder="https://exemplo.com/artigo  ou  cole aqui o texto copiado…"
-            className="mt-4 min-h-32 resize-y rounded-2xl text-base leading-relaxed"
+            className="mt-4 min-h-32 resize-y rounded-2xl text-base leading-relaxed text-black"
           />
 
           <div className="mt-4 flex flex-col gap-2 sm:flex-row">
@@ -224,7 +224,7 @@ function CapturePage() {
 
         {content && (
           <section className="surface p-4 sm:p-8">
-            <div className="mb-5 flex min-w-0 items-center gap-2 border-b border-border pb-4 text-xs text-muted-foreground">
+            <div className="mb-5 flex min-w-0 items-center gap-2 border-b border-border pb-4 text-xs text-black">
               <Link2 className="size-4 shrink-0" />
               <span className="truncate">{content.source}</span>
             </div>
@@ -240,7 +240,7 @@ function CapturePage() {
                 />
               ))}
             </div>
-            <p className="mt-6 text-center text-xs text-muted-foreground">
+            <p className="mt-6 text-center text-xs text-black">
               Passe o mouse ou toque em um item e clique no marcador para capturar.
             </p>
           </section>
