@@ -195,10 +195,10 @@ function CapturePage() {
             <Button
               size="lg"
               variant="outline"
-              className="h-12 gap-2"
+              className="h-12 gap-2 text-orange-500 hover:text-orange-600 hover:bg-orange-50 border-orange-200"
               onClick={() => void pasteFromClipboard()}
             >
-              <ClipboardPaste className="size-4" />
+              <ClipboardPaste className="size-4 text-orange-500" />
               Colar
             </Button>
             <Button
