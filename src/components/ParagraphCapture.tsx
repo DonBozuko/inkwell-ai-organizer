@@ -182,7 +182,7 @@ function CaptureForm({ text, source, attachment, file, onSaved, close }: MenuPro
           Salvando…
           </>
           ) : (
-          "Salvar na agenda"
+          <>Salvar <span className="text-green-600 dark:text-green-400">nova pasta</span></>
           )}
           </Button>
         </div>
