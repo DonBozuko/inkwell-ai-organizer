@@ -157,7 +157,7 @@ function CapturePage() {
   }, [raw, fetchUrl, setText]);
 
   return (
-    <div className="min-h-screen bg-blue-50/50">
+    <div className="min-h-screen bg-blue-50/50 font-['Century_Gothic','CenturyGothic',sans-serif] [&_*]:font-['Century_Gothic','CenturyGothic',sans-serif]">
       <AppShell>
         <div className="space-y-6">
         <section className="surface rise-in p-5 sm:p-6 font-['Century_Gothic','CenturyGothic',sans-serif]">
@@ -225,8 +225,8 @@ function CapturePage() {
         {content && (
           <section className="surface p-4 sm:p-8">
             <div className="mb-5 flex min-w-0 items-center gap-2 border-b border-border pb-4 text-xs text-black">
-              <Link2 className="size-4 shrink-0" />
-              <span className="truncate">{content.source}</span>
+              <Link2 className="size-4 shrink-0 text-black" />
+              <span className="truncate text-black">{content.source}</span>
             </div>
             <div className="space-y-1.5">
               {content.items.map((item, i) => (
