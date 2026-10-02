@@ -214,7 +214,7 @@ function CapturePage() {
             </Button>
           </div>
 
-          <div className="mt-5">
+          <div className="mt-5 [&_*]:text-black [&_button]:text-black [&_p]:text-black [&_span]:text-black">
             <UploadZone
               openRef={openUpload}
               onContent={(items, source) => setContent({ items, source })}
