@@ -270,11 +270,35 @@ function AgendaPage() {
   return (
     <AppShell>
       <div className="space-y-5">
-        <div>
-          <h1 className="text-2xl font-extrabold tracking-tight sm:text-3xl" style={{ color: "#8B0000" }}>
-            Agenda Inteligente
-          </h1>
-          <p className="mt-1.5 text-sm text-muted-foreground">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-extrabold tracking-tight sm:text-3xl" style={{ color: "#8B0000" }}>
+              Agenda Inteligente
+            </h1>
+            <p className="mt-1.5 text-sm text-muted-foreground">
+              {notes.length}{" "}
+              {notes.length === 1 ? "nota capturada" : "notas capturadas"}
+            </p>
+          </div>
+          <Button
+            variant="destructive"
+            size="sm"
+            className="gap-2 bg-red-600 hover:bg-red-700 text-white font-bold"
+            onClick={() => {
+              if (window.confirm("Tem certeza que deseja apagar todas as notas da agenda?")) {
+                try {
+                  notes.forEach((n) => removeNote(n.id));
+                  toast.success("Agenda limpa com sucesso!");
+                } catch {
+                  toast.error("Não foi possível limpar a agenda.");
+                }
+              }
+            }}
+          >
+            <Trash2 className="size-4" />
+            Apagar Tudo
+          </Button>
+        </div>
             {notes.length}{" "}
             {notes.length === 1 ? "nota capturada" : "notas capturadas"}
           </p>
