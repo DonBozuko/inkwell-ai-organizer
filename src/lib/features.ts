@@ -80,7 +80,7 @@ export const FEATURES: Feature[] = [
   {
     id: "colar",
     icon: ClipboardPaste,
-    title: "<span style=\"color: #eab308 !important;\">Colar</span>",
+    title: "Colar",
     shortDescription: "Da área de transferência",
     detailedDescription:
       "Lê o que está copiado e joga direto no campo de captura. Se o navegador bloquear, avisamos para colar manualmente.",
