@@ -199,7 +199,7 @@ function CapturePage() {
               onClick={() => void pasteFromClipboard()}
             >
               <ClipboardPaste className="size-4 text-white" />
-              <span className="text-red-500 font-semibold">Colar</span>
+              Colar
             </Button>
             <Button
               size="lg"
