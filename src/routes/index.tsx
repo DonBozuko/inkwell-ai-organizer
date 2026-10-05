@@ -194,8 +194,8 @@ function CapturePage() {
               {loading ? <Loader2 className="size-4 animate-spin" /> : <Sparkles className="size-4" />}
               Processar conteúdo
             </Button>
-            <Button size="lg" variant="outline" className="h-12 gap-2 text-yellow-500 border-yellow-500/50 hover:bg-yellow-500/10 hover:text-yellow-500" onClick={() => void pasteFromClipboard()}>
-              <ClipboardPaste className="size-4 text-yellow-500" />
+            <Button size="lg" variant="outline" className="h-12 gap-2" onClick={() => void pasteFromClipboard()}>
+              <ClipboardPaste className="size-4" />
               Colar
             </Button>
             <Button
