@@ -184,7 +184,7 @@ function CapturePage() {
           />
 
           <div className="mt-4 flex flex-col gap-2 sm:flex-row">
-            <Button size="lg" className="h-12 flex-1 gap-2 bg-blue-600 hover:bg-blue-700 text-white" onClick={process} disabled={loading}>
+            <Button size="lg" className="h-12 flex-1 gap-2 bg-gray-500 hover:bg-gray-600 text-white" onClick={process} disabled={loading}>
               {loading ? (
                 <Loader2 className="size-4 animate-spin" />
               ) : (
