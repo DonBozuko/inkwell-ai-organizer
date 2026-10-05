@@ -154,7 +154,7 @@
   }
 
   body {
-    background-color: var(--color-background) !important;
+    background-color: transparent !important;
     color: var(--color-foreground);
     font-family: 'Century Gothic', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
     -webkit-tap-highlight-color: transparent;
