@@ -21,16 +21,40 @@ import {
 import { cn } from "@/lib/utils";
 
 function sanitize(input: string): string {
-  return input.replace(/<[^>]*>?/g, "");
+  if (!input) return "";
+  // Remove HTML tags, control characters, and potential script injections
+  return input
+    .replace(/<[^>]*>?/gm, "")
+    .replace(/[\u0000-\u001F\u007F-\u009F]/g, "")
+    .trim();
 }
 
 function isValidUrl(url: string): boolean {
   try {
-    new URL(url);
-    return true;
+    const parsed = new URL(url);
+    return parsed.protocol === "http:" || parsed.protocol === "https:";
   } catch {
     return false;
   }
+}
+
+function validateAndSanitizeText(text: string): { isValid: boolean; sanitizedText: string; error?: string } {
+  if (!text) {
+    return { isValid: true, sanitizedText: "" };
+  }
+  
+  // Basic length validation to prevent excessively large payloads
+  if (text.length > 50000) {
+    return { isValid: false, sanitizedText: "", error: "O texto excede o limite máximo de 50.000 caracteres." };
+  }
+
+  const sanitized = sanitize(text);
+  
+  // Validate URLs present in text
+  const urlRegex = /(https?:\/\/[^\s]+)/g;
+  const processedText = sanitized.replace(urlRegex, (match) => (isValidUrl(match) ? match : ""));
+
+  return { isValid: true, sanitizedText: processedText };
 }
 
 type MenuProps = {
@@ -70,13 +94,14 @@ function CaptureForm({ text, source, attachment, file, onSaved, close }: MenuPro
       if (tagsArray.length > 10) {
       throw new Error("Máximo de 10 tags permitidos.");
       }
-      const sanitizedText = sanitize(text);
-      // Validate URLs in text
-      const urlRegex = /(https?:\/\/[^\s]+)/g;
-      const processedText = sanitizedText.replace(urlRegex, (match) => (isValidUrl(match) ? match : ""));
+      const textValidation = validateAndSanitizeText(text);
+      if (!textValidation.isValid) {
+        throw new Error(textValidation.error || "Texto inválido ou malformado.");
+      }
+
       await addNote({
         title: trimmedTitle,
-        text: processedText,
+        text: textValidation.sanitizedText,
         category: cat,
         tags: tagsArray,
         source,
