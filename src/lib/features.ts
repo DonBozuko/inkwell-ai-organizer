@@ -66,6 +66,7 @@ export const FEATURES: Feature[] = [
       "Modelo curto para registrar um insight antes que ele escape. A IA sugere o título e classifica em Insights.",
     action: "prefill",
     template: "Ideia importante: ",
+    className: "text-white hover:text-white",
   },
   {
     id: "tarefa-urgente",
