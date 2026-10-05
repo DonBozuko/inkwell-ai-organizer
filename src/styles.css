@@ -113,7 +113,7 @@
   --marker-soft: oklch(0.68 0.16 256 / 0.18);
   --shadow-soft: 0 1px 2px oklch(0 0 0 / 0.4), 0 8px 24px -12px oklch(0 0 0 / 0.6);
   --shadow-float: 0 24px 60px -20px oklch(0 0 0 / 0.7);
-  --background: #0f172a;
+  --background: transparent;
   --foreground: oklch(0.984 0.003 247.858);
   --card: oklch(0.21 0.025 262);
   --card-foreground: oklch(0.984 0.003 247.858);
