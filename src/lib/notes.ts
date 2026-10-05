@@ -149,11 +149,9 @@ if (typeof document !== "undefined") {
     style.innerHTML = `
       * {
         font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif !important;
-        color: purple !important;
       }
       body {
         font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif !important;
-        color: purple !important;
       }
     `;
     document.head.appendChild(style);
