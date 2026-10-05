@@ -159,6 +159,50 @@
     font-family: 'Century Gothic', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
     -webkit-tap-highlight-color: transparent;
   }
+
+  /* Markdown (.md) global styling integration with theme variables */
+  .md, .markdown, .prose {
+    color: var(--color-foreground);
+    font-family: 'Century Gothic', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+  }
+
+  .md h1, .md h2, .md h3, .md h4, .md h5, .md h6,
+  .markdown h1, .markdown h2, .markdown h3, .markdown h4, .markdown h5, .markdown h6,
+  .prose h1, .prose h2, .prose h3, .prose h4, .prose h5, .prose h6 {
+    color: var(--color-foreground);
+  }
+
+  .md strong, .markdown strong, .prose strong {
+    color: var(--color-foreground);
+  }
+
+  .md a, .markdown a, .prose a {
+    color: var(--color-primary);
+    text-decoration: underline;
+  }
+
+  .md code, .markdown code, .prose code {
+    background-color: var(--color-muted);
+    color: var(--color-foreground);
+    padding: 0.125rem 0.25rem;
+    border-radius: var(--radius-sm);
+  }
+
+  .md pre, .markdown pre, .prose pre {
+    background-color: var(--color-card);
+    border: 1px solid var(--color-border);
+    color: var(--color-card-foreground);
+    border-radius: var(--radius-md);
+  }
+
+  .md blockquote, .markdown blockquote, .prose blockquote {
+    border-left-color: var(--color-border);
+    color: var(--color-muted-foreground);
+  }
+
+  .dark .md, .dark .markdown, .dark .prose {
+    color: var(--color-foreground);
+  }
 }
 
 @utility surface {
