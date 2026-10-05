@@ -184,7 +184,7 @@ function CapturePage() {
           />
 
           <div className="mt-4 flex flex-col gap-2 sm:flex-row">
-            <Button size="lg" className="h-12 flex-1 gap-2 bg-emerald-600 hover:bg-emerald-700 text-white" onClick={process} disabled={loading}>
+            <Button size="lg" className="h-12 flex-1 gap-2" onClick={process} disabled={loading}>
               {loading ? (
                 <Loader2 className="size-4 animate-spin" />
               ) : (
@@ -195,7 +195,7 @@ function CapturePage() {
             <Button
               size="lg"
               variant="outline"
-              className="h-12 gap-2 bg-blue-600 hover:bg-blue-700 text-white border-blue-600 hover:border-blue-700"
+              className="h-12 gap-2"
               onClick={() => void pasteFromClipboard()}
             >
               <ClipboardPaste className="size-4 text-white" />
