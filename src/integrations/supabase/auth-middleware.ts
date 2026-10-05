@@ -102,9 +102,8 @@ export const requireSupabaseAuth = createMiddleware({ type: 'function' }).server
         },
       });
     } catch (err: any) {
-      const errorMessage = err?.message || 'Unauthorized';
-      console.error('[Supabase Auth Middleware Error]:', errorMessage);
-      throw new Error(errorMessage);
+      console.error('[Supabase Auth Middleware Error]:', err?.message || err);
+      throw new Error('Unauthorized');
     }
   },
 );
