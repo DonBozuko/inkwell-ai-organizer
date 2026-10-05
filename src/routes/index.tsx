@@ -161,15 +161,15 @@ function CapturePage() {
       <AppShell>
         <div className="space-y-6">
         <section className="surface rise-in p-5 sm:p-6 font-['Century_Gothic','CenturyGothic',sans-serif]">
-          <h1 className="text-2xl font-extrabold tracking-tight sm:text-3xl text-black">
+          <h1 className="text-2xl font-extrabold tracking-tight sm:text-3xl text-orange-600">
           Agenda Inteligente
           </h1>
-          <p className="mt-1.5 text-sm text-black">
+          <p className="mt-1.5 text-sm text-orange-700">
             Cole um link, um texto copiado — ou envie PDFs, imagens e pastas inteiras.
           </p>
 
           <div className="mt-4">
-            <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-black">
+            <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-orange-600">
               Melhores funções
             </p>
             <FeatureGrid onSelect={runFeature} />
@@ -180,11 +180,11 @@ function CapturePage() {
             value={raw}
             onChange={(e) => setRaw(e.target.value)}
             placeholder="https://exemplo.com/artigo  ou  cole aqui o texto copiado…"
-            className="mt-4 min-h-32 resize-y rounded-2xl text-base leading-relaxed text-black"
+            className="mt-4 min-h-32 resize-y rounded-2xl text-base leading-relaxed text-orange-900 border-orange-300 focus-visible:ring-orange-500"
           />
 
           <div className="mt-4 flex flex-col gap-2 sm:flex-row">
-            <Button size="lg" className="h-12 flex-1 gap-2 bg-emerald-600 hover:bg-emerald-700 text-white" onClick={process} disabled={loading}>
+            <Button size="lg" className="h-12 flex-1 gap-2 bg-orange-600 hover:bg-orange-700 text-white" onClick={process} disabled={loading}>
               {loading ? (
                 <Loader2 className="size-4 animate-spin" />
               ) : (
@@ -195,7 +195,7 @@ function CapturePage() {
             <Button
               size="lg"
               variant="outline"
-              className="h-12 gap-2 bg-blue-600 hover:bg-blue-700 text-white border-blue-600 hover:border-blue-700"
+              className="h-12 gap-2 bg-orange-500 hover:bg-orange-600 text-white border-orange-500 hover:border-orange-600"
               onClick={() => void pasteFromClipboard()}
             >
               <ClipboardPaste className="size-4 text-white" />
@@ -204,7 +204,7 @@ function CapturePage() {
             <Button
               size="lg"
               variant="ghost"
-              className="h-12 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50"
+              className="h-12 text-orange-600 hover:text-orange-700 hover:bg-orange-50"
               onClick={() => {
                 setRaw(SAMPLE);
                 setText(SAMPLE, "Exemplo");
@@ -214,7 +214,7 @@ function CapturePage() {
             </Button>
           </div>
 
-          <div className="mt-5 [&_*]:text-black [&_button]:text-black [&_p]:text-black [&_span]:text-black">
+          <div className="mt-5 [&_*]:text-orange-800 [&_button]:text-orange-800 [&_p]:text-orange-800 [&_span]:text-orange-800">
             <UploadZone
               openRef={openUpload}
               onContent={(items, source) => setContent({ items, source })}
@@ -224,9 +224,9 @@ function CapturePage() {
 
         {content && (
           <section className="surface p-4 sm:p-8">
-            <div className="mb-5 flex min-w-0 items-center gap-2 border-b border-border pb-4 text-xs text-black">
-              <Link2 className="size-4 shrink-0 text-black" />
-              <span className="truncate text-black">{content.source}</span>
+            <div className="mb-5 flex min-w-0 items-center gap-2 border-b border-border pb-4 text-xs text-orange-700">
+              <Link2 className="size-4 shrink-0 text-orange-600" />
+              <span className="truncate text-orange-800">{content.source}</span>
             </div>
             <div className="space-y-1.5">
               {content.items.map((item, i) => (
@@ -240,7 +240,7 @@ function CapturePage() {
                 />
               ))}
             </div>
-            <p className="mt-6 text-center text-xs text-black">
+            <p className="mt-6 text-center text-xs text-orange-700">
               Passe o mouse ou toque em um item e clique no marcador para capturar.
             </p>
           </section>
