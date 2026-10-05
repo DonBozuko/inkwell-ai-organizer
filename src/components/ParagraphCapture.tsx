@@ -31,7 +31,7 @@ type MenuProps = {
 
 function defaultTitle(text: string, attachment?: Attachment) {
   if (text.trim()) return suggestTitle(text);
-  return attachment?.name.replace(/\.[^.]+$/, "") ?? "Nova nota";
+  return attachment?.name.replace(/\.[^.]+$/, "") ?? "amarelo";
 }
 
 function CaptureForm({ text, source, attachment, file, onSaved, close }: MenuProps) {
