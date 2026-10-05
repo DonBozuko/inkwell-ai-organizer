@@ -25,15 +25,46 @@ export function UploadZone({
   const [over, setOver] = useState(false);
   const supportsDnD = typeof window !== "undefined" && "draggable" in document.createElement("div");
   const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5 MB
+  const ALLOWED_MIME_TYPES = new Set([
+    "application/pdf",
+    "text/plain",
+    "text/markdown",
+    "text/csv",
+    "application/json",
+    "text/html",
+    "application/xml",
+    "text/xml",
+    "application/x-yaml",
+    "text/yaml",
+  ]);
 
   const isAcceptedFile = (file: File) => {
+    // Sanitização e validação estrita de metadados e tipo
+    if (!file || typeof file.size !== "number" || typeof file.name !== "string") {
+      return false;
+    }
+    // Proteção contra path traversal / nomes maliciosos
+    if (file.name.includes("..") || file.name.includes("/") || file.name.includes("\\")) {
+      return false;
+    }
+
     const lowerName = file.name.toLowerCase();
     const patterns = ACCEPTED_FILE_TYPES.split(",").map((p) => p.trim());
-    return patterns.some((pattern) => {
+    
+    const matchesExtension = patterns.some((pattern) => {
       if (pattern === "image/*") return file.type.startsWith("image/");
       const ext = pattern.replace(".", "");
       return lowerName.endsWith(`.${ext}`);
     });
+
+    if (!matchesExtension) return false;
+
+    // Validação estrita por MIME type para tipos não-imagem
+    if (file.type.startsWith("image/")) {
+      return ["image/jpeg", "image/png", "image/webp", "image/gif", "image/svg+xml"].includes(file.type);
+    }
+
+    return ALLOWED_MIME_TYPES.has(file.type) || file.type === "" || lowerName.endsWith(".md") || lowerName.endsWith(".yml") || lowerName.endsWith(".yaml");
   };
 
   useEffect(() => {
