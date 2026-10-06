@@ -127,7 +127,7 @@ const NoteCard: FC<NoteCardProps> = ({ note, onRemove }) => {
             {formatDate(note.createdAt)}
           </p>
         </div>
-        <Badge className="shrink-0 border-0 bg-marker-soft text-marker">
+        <Badge className={cn("shrink-0 border-0", note.category === "tarefas" ? "bg-red-600 text-white dark:bg-red-600 dark:text-white" : "bg-marker-soft text-marker")}>
           {categoryLabel(note.category)}
         </Badge>
       </header>
