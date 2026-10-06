@@ -56,6 +56,7 @@ export const FEATURES: Feature[] = [
       "Abre o campo de captura já preparado com um modelo de nota livre para você escrever e salvar na pasta certa.",
     action: "prefill",
     template: "Nota: ",
+    className: "text-red-500 hover:text-red-500",
   },
   {
     id: "ideia-rapida",
